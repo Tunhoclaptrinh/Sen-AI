@@ -1,0 +1,158 @@
+🟠 VẤN ĐỀ 15: Chapter unlock không check chapter trước
+❌ Code hiện tại
+javascriptcanUnlockChapter(chapter, progress) {
+  if (chapter.required_petals === 0) return true;
+  return progress.total_sen_petals >= chapter.required_petals;
+  // ❌ Chỉ check petals, user có thể skip chapter 2
+}
+✅ Code cải thiện
+javascriptcanUnlockChapter(chapter, progress) {
+  // Chapter 1 luôn unlock được
+  if (chapter.order === 1 || chapter.required_petals === 0) {
+    return { canUnlock: true };
+  }
+
+  // ✅ CHECK PREVIOUS CHAPTER COMPLETED
+  const prevChapterOrder = chapter.order - 1;
+  const allChapters = db.findAll('game_chapters');
+  
+  const prevChapter = allChapters.find(c => c.order === prevChapterOrder);
+  
+  if (prevChapter) {
+    const prevUnlocked = progress.unlocked_chapters.includes(prevChapter.id);
+    
+    if (!prevUnlocked) {
+      return {
+        canUnlock: false,
+        reason: 'previous_chapter_locked',
+        message: `You must unlock "${prevChapter.name}" first`,
+        requiredChapter: {
+          id: prevChapter.id,
+          name: prevChapter.name,
+          order: prevChapter.order
+        }
+      };
+    }
+
+    // ✅ CHECK PREVIOUS CHAPTER COMPLETED (at least 1 level)
+    const prevLevels = db.findMany('game_levels', { chapter_id: prevChapter.id });
+    const completedPrevLevels = prevLevels.filter(l => 
+      progress.completed_levels.includes(l.id)
+    );
+
+    if (completedPrevLevels.length === 0) {
+      return {
+        canUnlock: false,
+        reason: 'previous_chapter_not_played',
+        message: `Complete at least 1 level in "${prevChapter.name}" first`,
+        requiredChapter: {
+          id: prevChapter.id,
+          name: prevChapter.name
+        }
+      };
+    }
+  }
+
+  // ✅ CHECK PETALS
+  if (progress.total_sen_petals < chapter.required_petals) {
+    return {
+      canUnlock: false,
+      reason: 'insufficient_petals',
+      message: `Need ${chapter.required_petals} petals (you have ${progress.total_sen_petals})`,
+      required: chapter.required_petals,
+      current: progress.total_sen_petals,
+      needed: chapter.required_petals - progress.total_sen_petals
+    };
+  }
+
+  return { canUnlock: true };
+}
+Update unlockChapter method:
+javascriptasync unlockChapter(chapterId, userId) {
+  const chapter = db.findById('game_chapters', chapterId);
+  if (!chapter) {
+    return { success: false, message: 'Chapter not found', statusCode: 404 };
+  }
+
+  const progress = db.findOne('game_progress', { user_id: userId });
+
+  // ✅ CHECK IF ALREADY UNLOCKED
+  if (progress.unlocked_chapters.includes(parseInt(chapterId))) {
+    return { 
+      success: false, 
+      message: 'Chapter already unlocked', 
+      statusCode: 400 
+    };
+  }
+
+  // ✅ USE IMPROVED VALIDATION
+  const validation = this.canUnlockChapter(chapter, progress);
+
+  if (!validation.canUnlock) {
+    return {
+      success: false,
+      message: validation.message,
+      statusCode: 403,
+      data: {
+        reason: validation.reason,
+        ...validation
+      }
+    };
+  }
+
+  // ✅ UNLOCK CHAPTER
+  db.update('game_progress', progress.id, {
+    unlocked_chapters: [...progress.unlocked_chapters, parseInt(chapterId)],
+    current_chapter: parseInt(chapterId)
+  });
+
+  return {
+    success: true,
+    message: `Chapter "${chapter.name}" unlocked successfully!`,
+    data: { 
+      chapter_id: parseInt(chapterId), 
+      chapter_name: chapter.name,
+      chapter_order: chapter.order
+    }
+  };
+}
+Update getChapters để show unlock status:
+javascriptasync getChapters(userId) {
+  const progress = await this.getProgress(userId);
+  const chapters = db.findAll('game_chapters').sort((a, b) => a.order - b.order);
+
+  const enriched = chapters.map(chapter => {
+    const isUnlocked = progress.data.unlocked_chapters.includes(chapter.id);
+    const levels = db.findMany('game_levels', { chapter_id: chapter.id });
+    const completedCount = levels.filter(l =>
+      progress.data.completed_levels.includes(l.id)
+    ).length;
+
+    // ✅ GET UNLOCK STATUS
+    const unlockValidation = this.canUnlockChapter(chapter, progress.data);
+
+    return {
+      ...chapter,
+      is_unlocked: isUnlocked,
+      total_levels: levels.length,
+      completed_levels: completedCount,
+      completion_rate: levels.length > 0
+        ? Math.round((completedCount / levels.length) * 100)
+        : 0,
+      
+      // ✅ DETAILED UNLOCK INFO
+      unlock_status: {
+        can_unlock: unlockValidation.canUnlock,
+        reason: unlockValidation.reason,
+        message: unlockValidation.message,
+        requirements: {
+          petals_required: chapter.required_petals,
+          petals_current: progress.data.total_sen_petals,
+          previous_chapter: unlockValidation.requiredChapter
+        }
+      }
+    };
+  });
+
+  return { success: true, data: enriched };
+}
