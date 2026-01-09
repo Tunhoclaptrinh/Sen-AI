@@ -1,0 +1,3436 @@
+{
+  "info": {
+    "name": "SEN API Collection",
+    "_postman_id": "sen-api-v2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "✅ SEN API v2.1.0 - Cultural Heritage Game Backend\n\n**Quick Start:**\n1. Login to get token (auto-saved)\n2. All authenticated requests use token automatically\n3. Use sample bodies provided\n\n**Test Accounts:**\n- Admin: admin@sen.com / 123456\n- Researcher: tuanpham@sen.com / 123456\n- Customer: huong.do@sen.com / 123456\n\n**Base URL:** http://localhost:3000/api\n\n**Last Updated:** December 28, 2025"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const path = pm.request.url.getPath();",
+          "if (!path.includes('auth/register') && !path.includes('auth/login')) {",
+          "    if (!pm.request.headers.has('Authorization')) {",
+          "        pm.request.headers.add({key: 'Authorization', value: 'Bearer {{token}}'});",
+          "    } else {",
+          "        pm.request.headers.upsert({key: 'Authorization', value: 'Bearer {{token}}'});",
+          "    }",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication & Users",
+      "item": [
+        {
+          "name": "1.1 Authentication",
+          "item": [
+            {
+              "name": "Register New User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"Nguyễn Văn A\",\n  \"phone\": \"0123456789\",\n  \"address\": \"123 Street, City\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "register"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Login",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const jsonData = pm.response.json();",
+                      "    if (jsonData.success && jsonData.data && jsonData.data.token) {",
+                      "        pm.collectionVariables.set('token', jsonData.data.token);",
+                      "        pm.environment.set('token', jsonData.data.token);",
+                      "        console.log('✅ Token saved successfully');",
+                      "        console.log('User:', jsonData.data.user.name);",
+                      "        console.log('Role:', jsonData.data.user.role);",
+                      "    }",
+                      "} else {",
+                      "    console.log('❌ Login failed');",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "login"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Current User",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "me"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Logout",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "logout"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Change Password",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"oldpassword123\",\n  \"newPassword\": \"newpassword456\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/change-password",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "change-password"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "1.2 User Management",
+          "item": [
+            {
+              "name": "Get All Users (Admin Only)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get User by ID (Admin Only)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update User Profile",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Nguyễn Văn B\",\n  \"phone\": \"0987654321\",\n  \"address\": \"456 New Street\",\n  \"avatar\": \"https://example.com/avatar.jpg\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/users/profile",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", "profile"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get User Activity (Protected)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/:id/activity",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", ":id", "activity"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get User Stats (Admin Only)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/stats/summary",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", "stats", "summary"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Toggle User Status (Admin Only)",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/:id/status",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", ":id", "status"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete User Permanently (Admin Only)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/:id/permanent",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", ":id", "permanent"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Download Template (Admin Only)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/template",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", "template"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Schema (Admin Only)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/schema",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", "schema"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Import Users (Admin Only)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "multipart/form-data"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/users/import",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", "import"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Export Users (Admin Only)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/export",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", "export"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Heritage & Artifacts",
+      "item": [
+        {
+          "name": "2.1 Heritage Sites",
+          "item": [
+            {
+              "name": "Get All Heritage Sites",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/heritage-sites?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["heritage-sites"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Search Heritage Sites",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/heritage-sites/search?q=query",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["heritage-sites", "search"],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "query"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Nearby Heritage Sites",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/heritage-sites/nearby?latitude=21.0285&longitude=105.8542&radius=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["heritage-sites", "nearby"],
+                  "query": [
+                    {
+                      "key": "latitude",
+                      "value": "21.0285"
+                    },
+                    {
+                      "key": "longitude",
+                      "value": "105.8542"
+                    },
+                    {
+                      "key": "radius",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Heritage Site by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/heritage-sites/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["heritage-sites", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Heritage Site Artifacts",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/heritage-sites/:id/artifacts",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["heritage-sites", ":id", "artifacts"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Heritage Site Timeline",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/heritage-sites/:id/timeline",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["heritage-sites", ":id", "timeline"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Heritage Site (Auth Required)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Hoàng thành Thăng Long\",\n  \"description\": \"Một trong những di tích lịch sử quan trọng bậc nhất của Việt Nam.\",\n  \"location\": {\n    \"address\": \"19C Hoàng Diệu, Ba Đình, Hà Nội\",\n    \"latitude\": 21.0345,\n    \"longitude\": 105.8421\n  },\n  \"period\": \"Thời Lý - Trần - Lê\",\n  \"type\": \"historic_building\",\n  \"year_established\": 1010\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/heritage-sites",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["heritage-sites"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Heritage Site (Auth Required)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/heritage-sites/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["heritage-sites", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Heritage Site (Auth Required)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/heritage-sites/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["heritage-sites", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "2.2 Artifacts",
+          "item": [
+            {
+              "name": "Get All Artifacts",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/artifacts?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["artifacts"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Search Artifacts",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/artifacts/search?q=query",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["artifacts", "search"],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "query"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Artifact by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/artifacts/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["artifacts", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Related Artifacts",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/artifacts/:id/related",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["artifacts", ":id", "related"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Artifact (Admin Only)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/artifacts",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["artifacts"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Artifact (Admin Only)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/artifacts/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["artifacts", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Artifact (Admin Only)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/artifacts/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["artifacts", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "2.3 Categories",
+          "item": [
+            {
+              "name": "Get All Categories",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/categories",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["categories"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Category by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/categories/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["categories", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Category (Admin Only)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/categories",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["categories"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Category (Admin Only)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/categories/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["categories", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Category (Admin Only)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/categories/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["categories", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "2.4 Exhibitions",
+          "item": [
+            {
+              "name": "Get All Exhibitions",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/exhibitions",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["exhibitions"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Active Exhibitions",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/exhibitions/active",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["exhibitions", "active"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Exhibition by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/exhibitions/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["exhibitions", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Exhibition (Admin Only)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/exhibitions",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["exhibitions"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Exhibition (Admin Only)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/exhibitions/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["exhibitions", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Exhibition (Admin Only)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/exhibitions/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["exhibitions", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Game System",
+      "item": [
+        {
+          "name": "3.1 Game Progress",
+          "item": [
+            {
+              "name": "Get User Progress",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/progress",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "progress"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Leaderboard",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/leaderboard?type=global&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "leaderboard"],
+                  "query": [
+                    {
+                      "key": "type",
+                      "value": "global"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Daily Reward",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/daily-reward",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "daily-reward"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3.2 Chapters (Sen Flowers)",
+          "item": [
+            {
+              "name": "Get All Chapters",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/chapters",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "chapters"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Chapter Detail",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/chapters/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "chapters", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Unlock Chapter",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/chapters/:id/unlock",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "chapters", ":id", "unlock"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3.3 Levels (Màn Chơi)",
+          "item": [
+            {
+              "name": "Get Levels by Chapter",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/levels/:chapterId",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "levels", ":chapterId"],
+                  "variable": [
+                    {
+                      "key": "chapterId",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Level Detail",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/levels/:id/detail",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "levels", ":id", "detail"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Start Level",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/levels/:id/start",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "levels", ":id", "start"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Navigate to Next Screen",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/sessions/:id/next-screen",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "sessions", ":id", "next-screen"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "session_123"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Submit Answer (for QUIZ screens)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"answerId\": \"answer_1\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/game/sessions/:id/submit-answer",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "sessions", ":id", "submit-answer"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "session_123"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Submit Timeline Order (for TIMELINE screens)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"eventOrder\": [\"evt1\", \"evt2\", \"evt3\"]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/game/sessions/:sessionId/submit-timeline",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "sessions", ":sessionId", "submit-timeline"],
+                  "variable": [
+                    {
+                      "key": "sessionId",
+                      "value": "123"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Collect Clue (for Hidden_Object screen)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"clueId\": \"clue_1\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/game/levels/:id/collect-clue",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "levels", ":id", "collect-clue"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Complete Level",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"score\": 950,\n  \"timeSpent\": 300\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/game/levels/:id/complete",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "levels", ":id", "complete"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3.4 Museum",
+          "item": [
+            {
+              "name": "Get Museum Collection",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/museum",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "museum"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Toggle Museum Status",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isOpen\": true\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/game/museum/toggle",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "museum", "toggle"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Collect Museum Income",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/museum/collect",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "museum", "collect"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3.5 Badges & Achievements",
+          "item": [
+            {
+              "name": "Get User Badges",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/badges",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "badges"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get User Achievements",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/achievements",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "achievements"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3.6 Scan to Play",
+          "item": [
+            {
+              "name": "Scan Object",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"HANOI001\",\n  \"latitude\": 21.0341,\n  \"longitude\": 105.8372\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/game/scan",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "scan"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3.7 Shop & Inventory",
+          "item": [
+            {
+              "name": "Purchase Item",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"itemId\": 1,\n  \"quantity\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/game/shop/purchase",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "shop", "purchase"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get User Inventory",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/game/inventory",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "inventory"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Use Item",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"itemId\": 1,\n  \"targetId\": 5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/game/inventory/use",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["game", "inventory", "use"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. AI Assistant",
+      "item": [
+        {
+          "name": "Chat with AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Chú Tễu ơi, hãy kể cho em nghe về Trống đồng Ngọc Lũ\",\n  \"context\": {\n    \"levelId\": 1,\n    \"artifactId\": 1\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai/history?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ask for Hint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 1,\n  \"clueId\": \"clue_1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/ask-hint",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "ask-hint"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Explain Artifact/Heritage Site",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"artifact\",\n  \"id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/explain",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "explain"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Quiz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topicId\": 1,\n  \"difficulty\": \"medium\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/quiz",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "quiz"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Chat History",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "history"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Learning & Quests",
+      "item": [
+        {
+          "name": "5.1 Learning Paths",
+          "item": [
+            {
+              "name": "Get All Learning Content",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/learning",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["learning"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Learning Path (User-specific)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/learning/path",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["learning", "path"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Learning Content by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/learning/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["learning", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Learning Content (Auth Required)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/learning",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["learning"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Complete Learning Content",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"score\": 85\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/learning/:id/complete",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["learning", ":id", "complete"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Learning Content (Auth Required)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/learning/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["learning", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Learning Content (Auth Required)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/learning/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["learning", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "5.2 Quests",
+          "item": [
+            {
+              "name": "Get All Quests",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/quests",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["quests"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Available Quests (User-specific)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/quests/available",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["quests", "available"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Quest Leaderboard",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/quests/leaderboard",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["quests", "leaderboard"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Quest by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/quests/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["quests", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Quest (Auth Required)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/quests",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["quests"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Complete Quest",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"score\": 100\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/quests/:id/complete",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["quests", ":id", "complete"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Quest (Auth Required)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/quests/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["quests", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Quest (Auth Required)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/quests/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["quests", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. User Content",
+      "item": [
+        {
+          "name": "6.1 Collections",
+          "item": [
+            {
+              "name": "Get User Collections",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/collections",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["collections"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Collection by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/collections/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["collections", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Collection",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Bộ sưu tập Đông Sơn\",\n  \"description\": \"Các hiện vật thời Đông Sơn\",\n  \"isPublic\": true\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/collections",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["collections"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Collection",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/collections/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["collections", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Collection",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/collections/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["collections", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Add Artifact to Collection",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/collections/:id/artifacts/:artifactId",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["collections", ":id", "artifacts", ":artifactId"],
+                  "variable": [
+                    {
+                      "key": "artifactId",
+                      "value": "1"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Artifact from Collection",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/collections/:id/artifacts/:artifactId",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["collections", ":id", "artifacts", ":artifactId"],
+                  "variable": [
+                    {
+                      "key": "artifactId",
+                      "value": "1"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "6.2 Favorites",
+          "item": [
+            {
+              "name": "Get All Favorites",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites"]
+                }
+              }
+            },
+            {
+              "name": "Get Favorite Statistics",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites/stats/summary",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites", "stats", "summary"]
+                }
+              }
+            },
+            {
+              "name": "Clear All Favorites",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites"]
+                }
+              }
+            },
+            {
+              "name": "Get Trending Favorites",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites/trending/:type",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites", "trending", ":type"],
+                  "variable": [
+                    {
+                      "key": "type",
+                      "value": "artifact"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Favorites by Type",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites/:type",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites", ":type"],
+                  "variable": [
+                    {
+                      "key": "type",
+                      "value": "artifact"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Favorite IDs by Type",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites/:type/ids",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites", ":type", "ids"],
+                  "variable": [
+                    {
+                      "key": "type",
+                      "value": "artifact"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Check if Item is Favorited",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites/:type/:id/check",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites", ":type", ":id", "check"],
+                  "variable": [
+                    {
+                      "key": "type",
+                      "value": "artifact"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Toggle Favorite",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites/:type/:id/toggle",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites", ":type", ":id", "toggle"],
+                  "variable": [
+                    {
+                      "key": "type",
+                      "value": "artifact"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Add Favorite",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites/:type/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites", ":type", ":id"],
+                  "variable": [
+                    {
+                      "key": "type",
+                      "value": "artifact"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Remove Favorite",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites/:type/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites", ":type", ":id"],
+                  "variable": [
+                    {
+                      "key": "type",
+                      "value": "artifact"
+                    },
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Clear Favorites by Type",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/favorites/:type",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["favorites", ":type"],
+                  "variable": [
+                    {
+                      "key": "type",
+                      "value": "artifact"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "6.3 Reviews",
+          "item": [
+            {
+              "name": "Get All Reviews",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/reviews?page=1&limit=20&sort=newest",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reviews"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "newest"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Search Reviews",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/reviews/search?q=query",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reviews", "search"],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "query"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Reviews by Type",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/reviews/type/:type",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reviews", "type", ":type"],
+                  "variable": [
+                    {
+                      "key": "type",
+                      "value": "artifact"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Review by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/reviews/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reviews", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Review",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"artifact\",\n  \"itemId\": 1,\n  \"rating\": 5,\n  \"content\": \"Rất thú vị và có giá trị học tập!\",\n  \"images\": []\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reviews",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reviews"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Review",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reviews/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reviews", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Review",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/reviews/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reviews", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Upload & Media",
+      "item": [
+        {
+          "name": "Upload Avatar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/avatar",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "avatar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Category Image (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/category/:categoryId",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "category", ":categoryId"],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "1",
+                  "description": "ID of category"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Heritage Site Image (Admin/Researcher)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/heritage-site/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "heritage-site", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Artifact Image (Admin/Researcher)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/artifact/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "artifact", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Exhibition Image (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/exhibition/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "exhibition", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Game Asset (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/game/:type/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "game", ":type", ":id"],
+              "variable": [
+                {
+                  "key": "type",
+                  "value": "character"
+                },
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Category Image (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/category/:categoryId",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "category", ":categoryId"],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete File (Admin Only)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/upload/file?path=file_path",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "file"],
+              "query": [
+                {
+                  "key": "path",
+                  "value": "file_path"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get File Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/upload/file/info?path=file_path",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "file", "info"],
+              "query": [
+                {
+                  "key": "path",
+                  "value": "file_path"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Storage Stats (Admin Only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/upload/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cleanup Old Files (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"days\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/upload/cleanup",
+              "host": ["{{baseUrl}}"],
+              "path": ["upload", "cleanup"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Admin CMS",
+      "item": [
+        {
+          "name": "8.1 Level Management (CMS)",
+          "item": [
+            {
+              "name": "Get All Levels (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Level Templates",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/templates",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", "templates"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Level Statistics",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/stats",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", "stats"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Validate Level Data",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/validate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", "validate"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Level Detail (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Preview Level",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/:id/preview",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", ":id", "preview"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Used Assets in Level",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/:id/assets",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", ":id", "assets"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Level (Admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Khám Phá Trống Đồng\",\n  \"description\": \"Màn chơi về trống đồng Ngọc Lũ\",\n  \"chapterId\": 1,\n  \"order\": 1,\n  \"difficulty\": \"easy\",\n  \"screens\": [\n    {\n      \"id\": \"screen_1\",\n      \"type\": \"STORY\",\n      \"content\": \"Ngày xửa ngày xưa...\"\n    },\n    {\n      \"id\": \"screen_2\",\n      \"type\": \"QUIZ\",\n      \"question\": \"Trống đồng Ngọc Lũ thuộc nền văn hóa nào?\",\n      \"answers\": [\n        {\n          \"id\": \"a1\",\n          \"text\": \"Đông Sơn\",\n          \"isCorrect\": true\n        }\n      ]\n    }\n  ],\n  \"rewards\": {\n    \"senCoins\": 50,\n    \"experience\": 100\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Level (Admin)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Level (Admin)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Clone Level",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"newName\": \"Khám Phá Trống Đồng (Copy)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/:id/clone",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", ":id", "clone"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Bulk Import Levels",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "multipart/form-data"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/bulk/import",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "levels", "bulk", "import"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Reorder Levels in Chapter",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"levelIds\": [3, 1, 2, 5, 4]\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/levels/chapters/:chapterId/reorder",
+                  "host": ["{{baseUrl}}"],
+                  "path": [
+                    "admin",
+                    "levels",
+                    "chapters",
+                    ":chapterId",
+                    "reorder"
+                  ],
+                  "variable": [
+                    {
+                      "key": "chapterId",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "8.2 Chapter Management (CMS)",
+          "item": [
+            {
+              "name": "Get All Chapters (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/chapters",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "chapters"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Chapter by ID (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/chapters/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "chapters", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Chapter (Admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Sen Hồng - Ký Ức Đầu Tiên\",\n  \"description\": \"Chương đầu tiên của game\",\n  \"icon\": \"🌸\",\n  \"order\": 1,\n  \"unlockCost\": 0\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/chapters",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "chapters"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Chapter (Admin)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/chapters/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "chapters", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Chapter (Admin)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/chapters/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "chapters", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "8.3 Character Management (CMS)",
+          "item": [
+            {
+              "name": "Get All Characters (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/characters",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "characters"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Character by ID (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/characters/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "characters", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Character (Admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Chú Tễu\",\n  \"description\": \"NPC hướng dẫn\",\n  \"avatar\": \"https://example.com/chu_teu.png\",\n  \"personality\": \"Vui vẻ, hài hước\",\n  \"role\": \"guide\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/characters",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "characters"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Character (Admin)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/characters/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "characters", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Character (Admin)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/characters/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "characters", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "8.4 Asset Management (CMS)",
+          "item": [
+            {
+              "name": "Get All Assets (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/assets?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "assets"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Asset by ID (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/assets/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "assets", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Asset (Admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Background Music 1\",\n  \"type\": \"audio\",\n  \"url\": \"https://example.com/music1.mp3\",\n  \"tags\": [\"background\", \"music\", \"traditional\"]\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/assets",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "assets"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Asset (Admin)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/assets/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "assets", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Asset (Admin)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/assets/:id",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "assets", ":id"],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9. Notifications",
+      "item": [
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/:id/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", ":id", "read"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "read-all"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clear All Notifications",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

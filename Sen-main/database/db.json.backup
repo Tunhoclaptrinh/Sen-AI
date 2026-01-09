@@ -1,0 +1,2024 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin Sen",
+      "email": "admin@sen.com",
+      "password": "$2a$10$ljLMJFWpt4uYURYEkQdvGeBijln.p8.XQjHSP/iKWCesuPVaLhg/m",
+      "phone": "0912345678",
+      "role": "admin",
+      "isActive": true,
+      "createdAt": "2024-01-15T10:30:00Z",
+      "lastLogin": "2026-01-03T04:01:48.675Z"
+    },
+    {
+      "id": 2,
+      "name": "Phạm Văn Tuấn",
+      "email": "tuanpham@sen.com",
+      "password": "$2a$10$ljLMJFWpt4uYURYEkQdvGeBijln.p8.XQjHSP/iKWCesuPVaLhg/m",
+      "phone": "0987654321",
+      "role": "researcher",
+      "isActive": true,
+      "createdAt": "2024-02-20T14:20:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Đỗ Thị Hương",
+      "email": "huong.do@sen.com",
+      "password": "$2a$10$ljLMJFWpt4uYURYEkQdvGeBijln.p8.XQjHSP/iKWCesuPVaLhg/m",
+      "phone": "0901234567",
+      "role": "customer",
+      "isActive": true,
+      "createdAt": "2024-03-10T09:15:00Z"
+    },
+    {
+      "id": 4,
+      "name": "Nguyễn Minh Anh",
+      "email": "minhanh@sen.com",
+      "password": "$2a$10$ljLMJFWpt4uYURYEkQdvGeBijln.p8.XQjHSP/iKWCesuPVaLhg/m",
+      "phone": "0909123456",
+      "role": "customer",
+      "isActive": true,
+      "createdAt": "2024-04-05T11:00:00Z"
+    },
+    {
+      "id": 5,
+      "name": "Lê Văn Nam",
+      "email": "vannam@sen.com",
+      "password": "$2a$10$ljLMJFWpt4uYURYEkQdvGeBijln.p8.XQjHSP/iKWCesuPVaLhg/m",
+      "phone": "0908765432",
+      "role": "customer",
+      "isActive": true,
+      "createdAt": "2024-05-12T14:30:00Z"
+    },
+    {
+      "id": 9,
+      "_id": 9,
+      "name": "Tuấn",
+      "email": "Tuannt16@gmail.com",
+      "password": "$2a$10$uFTijUuZiTGX9JRxscDq..hHg4SR5fZhOeM6LvmU5wf0nMb7nLwky",
+      "phone": "1945650883",
+      "role": "admin",
+      "avatar": "https://ui-avatars.com/api/?name=Tu%E1%BA%A5n&background=random",
+      "isActive": true,
+      "createdAt": 46023.66986671296,
+      "updatedAt": 46023.66986671296,
+      "__v": 0
+    },
+    {
+      "id": 8,
+      "_id": 8,
+      "name": "Tuấn",
+      "email": "Tuannt@gmail.com",
+      "password": "$2a$10$9nFCK3ND.DjMCv9rek3D7.eCgtjppbOe3V/EgCISBiKs2C0cmbf8a",
+      "phone": "1945650883",
+      "role": "admin",
+      "avatar": "https://ui-avatars.com/api/?name=Tu%E1%BA%A5n&background=random",
+      "isActive": true,
+      "createdAt": 46023.666799942126,
+      "updatedAt": 46023.666799942126,
+      "__v": 0
+    },
+    {
+      "id": 7,
+      "_id": 7,
+      "name": "Nguyễn Văn B",
+      "email": "user2@example.com",
+      "password": "$2a$10$bC64nziKradMjY3o2CjsseVMjRR5ID9q4GJa6XaykRJBrgxEZiIwq",
+      "phone": "0123456789",
+      "role": "customer",
+      "avatar": "https://ui-avatars.com/api/?name=Nguy%E1%BB%85n%20V%C4%83n%20B&background=random",
+      "isActive": true,
+      "createdAt": 46022.55708806713,
+      "updatedAt": 46022.55708806713,
+      "__v": 0
+    },
+    {
+      "id": 6,
+      "_id": 6,
+      "name": "Nguyễn Văn A",
+      "email": "user@example.com",
+      "password": "$2a$10$znChzYc0dQlM0YZAUFU/xuy99rCUYJ9pJuRdKeK8wqNEBdaYxxH36",
+      "phone": "0123456789",
+      "role": "customer",
+      "avatar": "https://ui-avatars.com/api/?name=Nguy%E1%BB%85n%20V%C4%83n%20A&background=random",
+      "isActive": false,
+      "createdAt": 46022.54436064815,
+      "updatedAt": "2026-01-02T20:01:13.805Z",
+      "__v": 0
+    }
+  ],
+  "cultural_categories": [
+    {
+      "id": 1,
+      "name": "Kiến trúc cổ",
+      "icon": "🏯",
+      "description": "Công trình kiến trúc lịch sử"
+    },
+    {
+      "id": 2,
+      "name": "Mỹ thuật",
+      "icon": "🎨",
+      "description": "Tranh vẽ, điêu khắc, tác phẩm mỹ thuật"
+    },
+    {
+      "id": 3,
+      "name": "Tư liệu lịch sử",
+      "icon": "📚",
+      "description": "Tài liệu, sách vở, bản thảo"
+    },
+    {
+      "id": 4,
+      "name": "Gốm sứ",
+      "icon": "🏺",
+      "description": "Gốm cổ, sứ, đồ gốm mỹ nghệ"
+    },
+    {
+      "id": 5,
+      "name": "Vàng bạc đá quý",
+      "icon": "💎",
+      "description": "Trang sức, đồ trang trí bằng vàng bạc"
+    },
+    {
+      "id": 6,
+      "name": "Dệt may truyền thống",
+      "icon": "🧵",
+      "description": "Lụa, vải thêu, trang phục truyền thống"
+    },
+    {
+      "id": 7,
+      "name": "Di sản phi vật thể",
+      "icon": "🎭",
+      "description": "Âm nhạc, múa, phong tục truyền thống"
+    }
+  ],
+  "heritage_sites": [
+    {
+      "id": 1,
+      "name": "Thành Phố Hội An",
+      "type": "historic_building",
+      "cultural_period": "Triều Nguyễn - Pháp thuộc",
+      "region": "Quảng Nam",
+      "latitude": 15.8801,
+      "longitude": 108.3288,
+      "address": "Thành phố Hội An, Quảng Nam",
+      "year_established": 1624,
+      "year_restored": 1999,
+      "image": "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600",
+      "rating": 4.9,
+      "total_reviews": 523,
+      "visit_hours": "8:00 - 17:00",
+      "entrance_fee": 120000,
+      "is_active": true,
+      "unesco_listed": true,
+      "significance": "international"
+    },
+    {
+      "id": 2,
+      "name": "Hoàng Thành Thăng Long",
+      "type": "monument",
+      "cultural_period": "Triều Lý",
+      "region": "Hà Nội",
+      "latitude": 21.0341,
+      "longitude": 105.8372,
+      "address": "19C Hoàng Diệu, Ba Đình, Hà Nội",
+      "year_established": 1010,
+      "image": "https://images.unsplash.com/photo-1555169062-013468b47731?w=600",
+      "rating": 4.7,
+      "total_reviews": 892,
+      "visit_hours": "8:00 - 17:00",
+      "entrance_fee": 30000,
+      "is_active": true,
+      "unesco_listed": true,
+      "significance": "international"
+    },
+    {
+      "id": 3,
+      "name": "Bảo tàng Thành phố Hồ Chí Minh",
+      "type": "museum",
+      "cultural_period": "Hiện đại",
+      "region": "TP. Hồ Chí Minh",
+      "latitude": 10.7929,
+      "longitude": 106.6955,
+      "address": "65 Lý Tự Trọng, Q. 1, TP. Hồ Chí Minh",
+      "year_established": 1956,
+      "image": "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=600",
+      "rating": 4.5,
+      "total_reviews": 234,
+      "visit_hours": "8:00 - 17:00",
+      "entrance_fee": 50000,
+      "is_active": true,
+      "unesco_listed": false,
+      "significance": "national"
+    },
+    {
+      "id": 4,
+      "name": "Khu khảo cổ Óc Eo",
+      "type": "archaeological_site",
+      "cultural_period": "Thời kỳ Óc Eo",
+      "region": "An Giang",
+      "latitude": 10.1333,
+      "longitude": 104.7667,
+      "address": "Xã Tân Trung, huyện Tịnh Biên, An Giang",
+      "year_established": 150,
+      "year_restored": 2000,
+      "image": "https://images.unsplash.com/photo-1553484771-ee0bdc25ef14?w=600",
+      "rating": 4.3,
+      "total_reviews": 145,
+      "visit_hours": "8:00 - 16:30",
+      "entrance_fee": 30000,
+      "is_active": true,
+      "unesco_listed": false,
+      "significance": "national"
+    },
+    {
+      "id": 5,
+      "name": "Chùa Một Cột",
+      "type": "monument",
+      "cultural_period": "Triều Lý",
+      "region": "Hà Nội",
+      "latitude": 21.0356,
+      "longitude": 105.8336,
+      "address": "Chùa Một Cột, Ba Đình, Hà Nội",
+      "year_established": 1049,
+      "image": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600",
+      "rating": 4.6,
+      "total_reviews": 312,
+      "visit_hours": "7:00 - 18:00",
+      "entrance_fee": 0,
+      "is_active": true,
+      "unesco_listed": false,
+      "significance": "national"
+    },
+    {
+      "id": 6,
+      "name": "Văn Miếu - Quốc Tử Giám",
+      "type": "historic_building",
+      "cultural_period": "Triều Lý",
+      "region": "Hà Nội",
+      "latitude": 21.0277,
+      "longitude": 105.8355,
+      "address": "58 Quốc Tử Giám, Đống Đa, Hà Nội",
+      "year_established": 1070,
+      "image": "https://images.unsplash.com/photo-1528127269322-539801943592?w=600",
+      "rating": 4.8,
+      "total_reviews": 756,
+      "visit_hours": "8:00 - 17:00",
+      "entrance_fee": 30000,
+      "is_active": true,
+      "unesco_listed": false,
+      "significance": "national"
+    },
+    {
+      "id": 7,
+      "name": "Cố đô Huế",
+      "type": "historic_building",
+      "cultural_period": "Triều Nguyễn",
+      "region": "Thừa Thiên Huế",
+      "latitude": 16.4637,
+      "longitude": 107.5909,
+      "address": "Thành phố Huế, Thừa Thiên Huế",
+      "year_established": 1802,
+      "year_restored": 1993,
+      "image": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600",
+      "rating": 4.9,
+      "total_reviews": 1024,
+      "visit_hours": "7:00 - 17:30",
+      "entrance_fee": 200000,
+      "is_active": true,
+      "unesco_listed": true,
+      "significance": "international"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 1,
+      "name": "Bức tranh sơn dầu 'Phố cổ Hội An'",
+      "description": "Tranh sơn dầu thế kỷ 20 mô tả quang cảnh phố cổ Hội An",
+      "heritage_site_id": 1,
+      "category_id": 2,
+      "artifact_type": "painting",
+      "year_created": 1985,
+      "creator": "Nguyễn Tường",
+      "material": "Sơn dầu trên vải",
+      "dimensions": "100 x 80 cm",
+      "weight": 5,
+      "condition": "excellent",
+      "image": "https://images.unsplash.com/photo-1578321272176-b7899d21b5d5?w=600",
+      "is_on_display": true,
+      "location_in_site": "Phòng tranh 1, Tầng 1",
+      "updatedAt": "2026-01-03T03:47:29.585Z"
+    },
+    {
+      "id": 2,
+      "name": "Bộ đồ gốm Thương Tín",
+      "description": "Bộ gốm sứ thương mại từ thế kỷ 15-16 thời kỳ Hội An",
+      "heritage_site_id": 1,
+      "category_id": 4,
+      "artifact_type": "pottery",
+      "year_created": 1500,
+      "material": "Gốm sứ xanh",
+      "dimensions": "Cao 30cm",
+      "condition": "good",
+      "image": "https://images.unsplash.com/photo-1578500494198-246f612d03b3?w=600",
+      "is_on_display": true,
+      "location_in_site": "Phòng gốm, Tầng 2"
+    },
+    {
+      "id": 3,
+      "name": "Trống đồng Đông Sơn",
+      "description": "Trống đồng văn hóa Đông Sơn",
+      "heritage_site_id": 4,
+      "category_id": 4,
+      "artifact_type": "bronze",
+      "year_created": -500,
+      "material": "Đồng",
+      "dimensions": "Đường kính 63cm",
+      "condition": "good",
+      "image": "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=600",
+      "is_on_display": true,
+      "location_in_site": "Khu vực chính"
+    },
+    {
+      "id": 4,
+      "name": "Bia Tiến sĩ đá xanh",
+      "description": "Bia đá khắc tên các tiến sĩ khoa thi",
+      "heritage_site_id": 6,
+      "category_id": 3,
+      "artifact_type": "stone",
+      "year_created": 1442,
+      "material": "Đá xanh",
+      "dimensions": "Cao 1.2m",
+      "condition": "good",
+      "image": "https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=600",
+      "is_on_display": true,
+      "location_in_site": "Sân chính"
+    },
+    {
+      "id": 5,
+      "name": "Áo dài truyền thống",
+      "description": "Áo dài lụa thêu tay thế kỷ 19",
+      "heritage_site_id": 7,
+      "category_id": 6,
+      "artifact_type": "textile",
+      "year_created": 1850,
+      "material": "Lụa thêu",
+      "dimensions": "150 x 60 cm",
+      "condition": "fair",
+      "image": "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=600",
+      "is_on_display": true,
+      "location_in_site": "Phòng trang phục"
+    },
+    {
+      "id": 6,
+      "name": "Nguyễn Tiến Tuấn",
+      "description": "Sinh vật quý hiếm",
+      "category": "Trang sức",
+      "period": "hiện đại",
+      "culturalSignificance": "danh nhân thế giới tương lai",
+      "createdAt": "2025-12-03T09:23:39.017Z",
+      "updatedAt": "2025-12-03T09:23:39.017Z"
+    }
+  ],
+  "timelines": [
+    {
+      "id": 1,
+      "title": "Thành lập Hội An",
+      "description": "Hội An được thành lập như một cảng thương mại quan trọng",
+      "year": 1624,
+      "heritage_site_id": 1,
+      "category": "founded",
+      "image": "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600"
+    },
+    {
+      "id": 2,
+      "title": "Tu bổ Phố cổ",
+      "description": "Bắt đầu công trình tu bổ toàn diện phố cổ Hội An",
+      "year": 1999,
+      "heritage_site_id": 1,
+      "category": "restored",
+      "image": "https://images.unsplash.com/photo-1578107982254-eb158fc3a0e7?w=600"
+    },
+    {
+      "id": 3,
+      "title": "UNESCO công nhận",
+      "description": "Phố cổ Hội An được UNESCO công nhận là Di sản Thế giới",
+      "year": 1999,
+      "heritage_site_id": 1,
+      "category": "recognition",
+      "image": "https://images.unsplash.com/photo-1579722821273-8a36ae95db51?w=600"
+    },
+    {
+      "id": 4,
+      "title": "Xây dựng Hoàng Thành",
+      "description": "Vua Lý Thái Tổ dời đô về Thăng Long và xây Hoàng Thành",
+      "year": 1010,
+      "heritage_site_id": 2,
+      "category": "founded",
+      "image": "https://images.unsplash.com/photo-1555169062-013468b47731?w=600"
+    },
+    {
+      "id": 5,
+      "title": "UNESCO công nhận Hoàng Thành",
+      "description": "Hoàng Thành Thăng Long được UNESCO công nhận",
+      "year": 2010,
+      "heritage_site_id": 2,
+      "category": "recognition",
+      "image": "https://images.unsplash.com/photo-1555169062-013468b47731?w=600"
+    }
+  ],
+  "exhibitions": [
+    {
+      "id": 1,
+      "name": "Hành trình Hội An qua 400 năm",
+      "description": "Triển lãm lịch sử toàn diện về Hội An từ thế kỷ 17 đến nay",
+      "heritage_site_id": 1,
+      "theme": "Lịch sử & Văn hóa Hội An",
+      "start_date": "2024-01-01T00:00:00Z",
+      "end_date": "2026-12-31T23:59:59Z",
+      "curator": "ThS. Trần Văn An",
+      "image": "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=600",
+      "artifact_ids": [
+        1,
+        2
+      ],
+      "is_active": true
+    },
+    {
+      "id": 2,
+      "name": "Văn minh Óc Eo bí ẩn",
+      "description": "Khám phá nền văn minh Óc Eo cổ đại",
+      "heritage_site_id": 4,
+      "theme": "Khảo cổ học",
+      "start_date": "2024-03-01T00:00:00Z",
+      "end_date": "2026-08-31T23:59:59Z",
+      "curator": "GS. Lê Văn Minh",
+      "image": "https://images.unsplash.com/photo-1553484771-ee0bdc25ef14?w=600",
+      "artifact_ids": [
+        3
+      ],
+      "is_active": true
+    }
+  ],
+  "favorites": [
+    {
+      "id": 1,
+      "userId": 2,
+      "type": "heritage_site",
+      "referenceId": 1,
+      "createdAt": "2024-10-15T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "userId": 3,
+      "type": "artifact",
+      "referenceId": 1,
+      "createdAt": "2024-10-22T11:45:00Z"
+    },
+    {
+      "id": 3,
+      "userId": 4,
+      "type": "heritage_site",
+      "referenceId": 2,
+      "createdAt": "2024-11-05T14:20:00Z"
+    },
+    {
+      "id": 4,
+      "userId": 5,
+      "type": "artifact",
+      "referenceId": 3,
+      "createdAt": "2024-11-10T16:30:00Z"
+    }
+  ],
+  "reviews": [
+    {
+      "id": 1,
+      "userId": 2,
+      "type": "heritage_site",
+      "heritage_site_id": 1,
+      "rating": 5,
+      "comment": "Hội An thật tuyệt vời! Di sản văn hóa được bảo tồn rất tốt. Rất đáng ghé thăm!",
+      "createdAt": "2024-10-20T14:00:00Z"
+    },
+    {
+      "id": 2,
+      "userId": 3,
+      "type": "artifact",
+      "heritage_site_id": 1,
+      "rating": 4,
+      "comment": "Những tư liệu gốm rất quý hiếm và được trưng bày cẩn thận.",
+      "createdAt": "2024-10-22T16:30:00Z"
+    },
+    {
+      "id": 3,
+      "userId": 4,
+      "type": "heritage_site",
+      "heritage_site_id": 2,
+      "rating": 5,
+      "comment": "Hoàng Thành Thăng Long mang đậm dấu ấn lịch sử ngàn năm văn hiến!",
+      "createdAt": "2024-11-06T10:15:00Z"
+    },
+    {
+      "id": 4,
+      "userId": 5,
+      "type": "heritage_site",
+      "heritage_site_id": 6,
+      "rating": 5,
+      "comment": "Văn Miếu rất thanh tịnh và giàu giá trị văn hóa.",
+      "createdAt": "2024-11-12T09:30:00Z"
+    }
+  ],
+  "game_chapters": [
+    {
+      "id": 1,
+      "name": "Lớp Cánh 1: Cội Nguồn",
+      "description": "Những câu chuyện khởi nguồn của văn hóa Bắc Bộ.",
+      "layer_index": 1,
+      "petal_state": "blooming",
+      "required_petals": 0,
+      "is_active": true
+    },
+    {
+      "id": 2,
+      "name": "Lớp Cánh 2: Giao Thoa",
+      "description": "Sự giao thoa văn hóa thế kỷ 18-19.",
+      "layer_index": 2,
+      "petal_state": "locked",
+      "required_petals": 0,
+      "is_active": true
+    },
+    {
+      "id": 3,
+      "name": "Lớp Cánh 3: Hoàng Kim",
+      "description": "Thời kỳ phồn vinh của các triều đại phong kiến.",
+      "layer_index": 3,
+      "petal_state": "locked",
+      "required_petals": 0,
+      "is_active": true
+    }
+  ],
+  "game_characters": [
+    {
+      "id": 1,
+      "name": "Chú Tễu",
+      "description": "Nhân vật rối nước vui tính, thông minh",
+      "persona": "Bạn là Chú Tễu, một nhân vật rối nước vui tính từ múa rối Bắc Bộ. Bạn đang bị mất trí nhớ và mất màu sơn. Bạn cần sự giúp đỡ của người chơi để tìm lại ký ức.",
+      "speaking_style": "Vui vẻ, hài hước, sử dụng từ ngữ dân dã, có chút nhí nhảnh",
+      "avatar": "https://example.com/teu-colored.png",
+      "avatar_uncolored": "https://example.com/teu-uncolored.png",
+      "rarity": "rare",
+      "origin": "Múa rối nước",
+      "is_collectible": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Thị Kính",
+      "description": "Nhân vật trong truyền thuyết Quan Âm Thị Kính",
+      "persona": "Bạn là Thị Kính, người phụ nữ kiên cường và nhân từ. Bạn hướng dẫn người chơi với sự dịu dàng và khôn ngoan.",
+      "speaking_style": "Nhẹ nhàng, từ tốn, khôn ngoan",
+      "avatar": "https://example.com/thikinh.png",
+      "rarity": "epic",
+      "origin": "Truyền thuyết dân gian",
+      "is_collectible": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Thánh Gióng",
+      "description": "Vị thánh trong truyền thuyết dân gian Việt Nam",
+      "persona": "Bạn là Thánh Gióng, vị anh hùng bảo vệ dân tộc. Bạn dũng mãnh, quyết đoán và luôn sẵn sàng chiến đấu vì chính nghĩa.",
+      "speaking_style": "Hùng hồn, mạnh mẽ, có khí phách",
+      "avatar": "https://example.com/giong.png",
+      "rarity": "legendary",
+      "origin": "Truyền thuyết Thánh Gióng",
+      "is_collectible": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 4,
+      "name": "Chú Cuội",
+      "description": "Nhân vật trong truyền thuyết cây đa",
+      "persona": "Bạn là Chú Cuội, người gắn liền với cây đa và mặt trăng. Bạn hiền lành, yêu thiên nhiên và hay kể chuyện.",
+      "speaking_style": "Chậm rãi, thơ mộng, giàu cảm xúc",
+      "avatar": "https://example.com/cuoi.png",
+      "rarity": "rare",
+      "origin": "Truyền thuyết Chú Cuội",
+      "is_collectible": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "game_levels": [
+    {
+      "id": 1,
+      "chapter_id": 1,
+      "name": "Dòng thời gian lịch sử",
+      "description": "Sắp xếp các sự kiện lịch sử theo đúng thứ tự thời gian",
+      "type": "timeline",
+      "difficulty": "easy",
+      "order": 1,
+      "required_level": null,
+      "background_image": "https://images.unsplash.com/photo-1555169062-013468b47731?w=800",
+      "background_music": "https://example.com/audio/history-theme.mp3",
+      "ai_character_id": 2,
+      "knowledge_base": "Giai đoạn 18xx-19xx là thời kỳ quan trọng của lịch sử Việt Nam:\n- 1802: Nguyễn Ánh lên ngôi, lập triều Nguyễn\n- 1858: Pháp tấn công Đà Nẵng, bắt đầu xâm lược\n- 1862: Ký hiệp ước Nhâm Tuất, mất 3 tỉnh miền Đông\n- 1884: Hiệp ước Giáp Thân, Việt Nam thành thuộc địa\n- 1945: Cách mạng Tháng Tám thành công",
+      "screens": [
+        {
+          "id": "screen1",
+          "name": "Màn hình chính",
+          "background": "https://images.unsplash.com/photo-1555169062-013468b47731?w=800",
+          "type": "timeline",
+          "description": "Sắp xếp các sự kiện theo thứ tự thời gian"
+        },
+        {
+          "id": "screen2",
+          "name": "Triều Nguyễn",
+          "background": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800",
+          "type": "timeline",
+          "description": "Khám phá giai đoạn đầu triều Nguyễn"
+        },
+        {
+          "id": "screen3",
+          "name": "Thời kỳ Pháp thuộc",
+          "background": "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800",
+          "type": "timeline",
+          "description": "Giai đoạn Pháp xâm lược và thống trị"
+        },
+        {
+          "id": "screen4",
+          "name": "Độc lập dân tộc",
+          "background": "https://images.unsplash.com/photo-1528127269322-539801943592?w=800",
+          "type": "timeline",
+          "description": "Con đường giành lại độc lập"
+        }
+      ],
+      "clues": [
+        {
+          "id": "evt1",
+          "name": "Năm 1802",
+          "content": "Nguyễn Ánh lên ngôi hoàng đế",
+          "points": 10,
+          "hint": "Đây là sự kiện đầu triều Nguyễn"
+        },
+        {
+          "id": "evt2",
+          "name": "Năm 1858",
+          "content": "Pháp tấn công Đà Nẵng",
+          "points": 10,
+          "hint": "Sự kiện này đánh dấu bắt đầu chiến tranh"
+        },
+        {
+          "id": "evt3",
+          "name": "Năm 1862",
+          "content": "Ký hiệp ước Nhâm Tuất",
+          "points": 10,
+          "hint": "Việt Nam mất 3 tỉnh miền Đông"
+        },
+        {
+          "id": "evt4",
+          "name": "Năm 1884",
+          "content": "Hiệp ước Giáp Thân",
+          "points": 10,
+          "hint": "Việt Nam trở thành thuộc địa"
+        },
+        {
+          "id": "evt5",
+          "name": "Năm 1945",
+          "content": "Cách mạng Tháng Tám",
+          "points": 10,
+          "hint": "Việt Nam giành độc lập"
+        }
+      ],
+      "artifact_ids": [],
+      "heritage_site_id": null,
+      "quizzes": [
+        {
+          "id": "quiz1",
+          "question": "Triều Nguyễn được thành lập vào năm nào?",
+          "options": [
+            "1800",
+            "1802",
+            "1804",
+            "1806"
+          ],
+          "correct_answer": 1,
+          "points": 15,
+          "hint": "Nguyễn Ánh lên ngôi hoàng đế"
+        },
+        {
+          "id": "quiz2",
+          "question": "Pháp tấn công Đà Nẵng vào năm nào?",
+          "options": [
+            "1856",
+            "1858",
+            "1860",
+            "1862"
+          ],
+          "correct_answer": 1,
+          "points": 15,
+          "hint": "Bắt đầu xâm lược Việt Nam"
+        },
+        {
+          "id": "quiz3",
+          "question": "Cách mạng Tháng Tám thành công vào năm nào?",
+          "options": [
+            "1943",
+            "1944",
+            "1945",
+            "1946"
+          ],
+          "correct_answer": 2,
+          "points": 15,
+          "hint": "Việt Nam giành độc lập"
+        }
+      ],
+      "rewards": {
+        "petals": 1,
+        "coins": 50,
+        "character": null
+      },
+      "time_limit": 300,
+      "passing_score": 70,
+      "thumbnail": "https://images.unsplash.com/photo-1555169062-013468b47731?w=400",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "chapter_id": 1,
+      "name": "Ký ức chú Tễu",
+      "description": "Giúp chú Tễu tìm lại ký ức qua các vật phẩm trong múa rối nước",
+      "type": "hidden_object",
+      "difficulty": "medium",
+      "order": 2,
+      "required_level": 1,
+      "background_image": "https://example.com/bg/water-puppet-stage.jpg",
+      "background_music": "https://example.com/audio/cheo-instrumental.mp3",
+      "ai_character_id": 1,
+      "knowledge_base": "Múa rối nước là nghệ thuật độc đáo của Việt Nam:\n- Ra đời từ thời Lý (thế kỷ 11-12)\n- Biểu diễn trên mặt nước (thủy đình)\n- Chú Tễu là nhân vật kể chuyện chính\n- Các con rối được điều khiển bằng tre và dây\n- Thường biểu diễn trong các dịp lễ hội",
+      "screens": [
+        {
+          "id": "screen1",
+          "name": "Sân khấu múa rối",
+          "background": "https://example.com/bg/water-puppet-stage.jpg",
+          "type": "hidden_object",
+          "description": "Tìm các vật phẩm trong sân khấu múa rối nước"
+        },
+        {
+          "id": "screen2",
+          "name": "Phòng hậu trường",
+          "background": "https://example.com/bg/backstage.jpg",
+          "type": "hidden_object",
+          "description": "Khám phá phòng chuẩn bị con rối"
+        },
+        {
+          "id": "screen3",
+          "name": "Thủy đình",
+          "background": "https://example.com/bg/water-pavilion.jpg",
+          "type": "hidden_object",
+          "description": "Tìm vật phẩm dưới nước"
+        },
+        {
+          "id": "screen4",
+          "name": "Kho đạo cụ",
+          "background": "https://example.com/bg/props-room.jpg",
+          "type": "hidden_object",
+          "description": "Tìm đạo cụ truyền thống"
+        }
+      ],
+      "clues": [
+        {
+          "id": "clue1",
+          "name": "Cái quạt mo",
+          "content": "Cái quạt của chú Tễu dùng để phe phẩy, dẫn chuyện",
+          "coordinates": {
+            "x": 15,
+            "y": 45,
+            "width": 10,
+            "height": 10
+          },
+          "points": 15,
+          "hint": "Hãy tìm ở góc trái màn hình, gần con rối"
+        },
+        {
+          "id": "clue2",
+          "name": "Cờ hội",
+          "content": "Cờ hội thường được cắm quanh thủy đình trong dịp lễ",
+          "coordinates": {
+            "x": 80,
+            "y": 20,
+            "width": 5,
+            "height": 15
+          },
+          "points": 15,
+          "hint": "Nhìn lên cao, nơi có gió"
+        },
+        {
+          "id": "clue3",
+          "name": "Con trâu",
+          "content": "Trâu là biểu tượng của nông nghiệp Việt Nam",
+          "coordinates": {
+            "x": 50,
+            "y": 60,
+            "width": 15,
+            "height": 12
+          },
+          "points": 20,
+          "hint": "Ở giữa sân khấu, gần mặt nước"
+        }
+      ],
+      "artifact_ids": [
+        2
+      ],
+      "heritage_site_id": 1,
+      "quizzes": [
+        {
+          "id": "quiz1",
+          "question": "Múa rối nước ra đời từ triều đại nào?",
+          "options": [
+            "Triều Lý",
+            "Triều Trần",
+            "Triều Lê",
+            "Triều Nguyễn"
+          ],
+          "correct_answer": 0,
+          "points": 20,
+          "hint": "Thế kỷ 11-12"
+        },
+        {
+          "id": "quiz2",
+          "question": "Múa rối nước biểu diễn trên đâu?",
+          "options": [
+            "Sân khấu",
+            "Mặt nước",
+            "Sân đất",
+            "Trong nhà"
+          ],
+          "correct_answer": 1,
+          "points": 15,
+          "hint": "Thủy đình"
+        },
+        {
+          "id": "quiz3",
+          "question": "Chú Tễu là nhân vật gì trong múa rối?",
+          "options": [
+            "Người kể chuyện",
+            "Nông dân",
+            "Quan lại",
+            "Vua chúa"
+          ],
+          "correct_answer": 0,
+          "points": 20,
+          "hint": "Vai trò dẫn chuyện"
+        }
+      ],
+      "rewards": {
+        "petals": 2,
+        "coins": 100,
+        "character": "teu_full_color"
+      },
+      "time_limit": 600,
+      "passing_score": 80,
+      "thumbnail": "https://example.com/thumb/water-puppet.jpg",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "chapter_id": 1,
+      "name": "Bí ẩn Hoàng Thành",
+      "description": "Khám phá những bí mật trong Hoàng Thành Thăng Long",
+      "type": "hidden_object",
+      "difficulty": "medium",
+      "order": 3,
+      "required_level": 2,
+      "background_image": "https://images.unsplash.com/photo-1555169062-013468b47731?w=800",
+      "background_music": "https://example.com/audio/royal-theme.mp3",
+      "ai_character_id": 2,
+      "knowledge_base": "Hoàng Thành Thăng Long:\n- Xây dựng năm 1010 dưới triều Lý\n- Trung tâm quyền lực trong hơn 13 thế kỷ\n- Kiến trúc độc đáo kết hợp phong cách Việt-Hoa\n- UNESCO công nhận năm 2010",
+      "screens": [
+        {
+          "id": "screen1",
+          "name": "Cung điện chính",
+          "background": "https://images.unsplash.com/photo-1555169062-013468b47731?w=800",
+          "type": "hidden_object",
+          "description": "Khám phá bí mật trong cung điện Hoàng Thành"
+        },
+        {
+          "id": "screen2",
+          "name": "Thư viện hoàng gia",
+          "background": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800",
+          "type": "hidden_object",
+          "description": "Tìm sách cổ và bản đồ"
+        },
+        {
+          "id": "screen3",
+          "name": "Phòng ngự y",
+          "background": "https://images.unsplash.com/photo-1528127269322-539801943592?w=800",
+          "type": "hidden_object",
+          "description": "Khám phá trang phục hoàng gia"
+        },
+        {
+          "id": "screen4",
+          "name": "Kho báu triều Lý",
+          "background": "https://images.unsplash.com/photo-1555169062-013468b47731?w=800",
+          "type": "hidden_object",
+          "description": "Tìm các báu vật quý giá"
+        }
+      ],
+      "clues": [
+        {
+          "id": "clue1",
+          "name": "Ngọc ấn triều Lý",
+          "content": "Ấn vàng của vua triều Lý",
+          "coordinates": {
+            "x": 25,
+            "y": 35,
+            "width": 8,
+            "height": 8
+          },
+          "points": 20,
+          "hint": "Tìm ở cung điện chính"
+        },
+        {
+          "id": "clue2",
+          "name": "Bản đồ cổ",
+          "content": "Bản đồ Thăng Long thế kỷ 11",
+          "coordinates": {
+            "x": 70,
+            "y": 50,
+            "width": 12,
+            "height": 10
+          },
+          "points": 20,
+          "hint": "Kiếm trong thư viện hoàng gia"
+        },
+        {
+          "id": "clue3",
+          "name": "Long bào vua",
+          "content": "Áo long bào của hoàng đế",
+          "coordinates": {
+            "x": 45,
+            "y": 65,
+            "width": 10,
+            "height": 15
+          },
+          "points": 25,
+          "hint": "Trong phòng ngự y"
+        }
+      ],
+      "artifact_ids": [],
+      "heritage_site_id": 2,
+      "quizzes": [
+        {
+          "id": "quiz1",
+          "question": "Hoàng Thành Thăng Long được xây dựng năm nào?",
+          "options": [
+            "1008",
+            "1010",
+            "1012",
+            "1015"
+          ],
+          "correct_answer": 1,
+          "points": 20,
+          "hint": "Vua Lý Thái Tổ dời đô"
+        },
+        {
+          "id": "quiz2",
+          "question": "Hoàng Thành là trung tâm quyền lực trong bao nhiêu thế kỷ?",
+          "options": [
+            "10 thế kỷ",
+            "12 thế kỷ",
+            "13 thế kỷ",
+            "15 thế kỷ"
+          ],
+          "correct_answer": 2,
+          "points": 20,
+          "hint": "Hơn 1000 năm"
+        },
+        {
+          "id": "quiz3",
+          "question": "UNESCO công nhận Hoàng Thành năm nào?",
+          "options": [
+            "2008",
+            "2009",
+            "2010",
+            "2011"
+          ],
+          "correct_answer": 2,
+          "points": 15,
+          "hint": "1000 năm Thăng Long"
+        }
+      ],
+      "rewards": {
+        "petals": 2,
+        "coins": 120,
+        "character": null
+      },
+      "time_limit": 600,
+      "passing_score": 75,
+      "thumbnail": "https://images.unsplash.com/photo-1555169062-013468b47731?w=400",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 4,
+      "chapter_id": 2,
+      "name": "Văn minh Óc Eo",
+      "description": "Tìm hiểu về nền văn minh cổ đại Óc Eo",
+      "type": "hidden_object",
+      "difficulty": "hard",
+      "order": 1,
+      "required_level": 3,
+      "background_image": "https://images.unsplash.com/photo-1553484771-ee0bdc25ef14?w=800",
+      "background_music": "https://example.com/audio/ancient-theme.mp3",
+      "ai_character_id": 3,
+      "knowledge_base": "Văn minh Óc Eo:\n- Phát triển từ thế kỷ 1-7\n- Trung tâm thương mại quốc tế\n- Giao lưu với Ấn Độ, La Mã, Trung Quốc\n- Phát hiện nhiều hiện vật quý giá",
+      "screens": [
+        {
+          "id": "screen1",
+          "name": "Khu khảo cổ",
+          "background": "https://images.unsplash.com/photo-1553484771-ee0bdc25ef14?w=800",
+          "type": "hidden_object",
+          "description": "Tìm kiếm hiện vật cổ đại tại Óc Eo"
+        },
+        {
+          "id": "screen2",
+          "name": "Đền thờ cổ",
+          "background": "https://images.unsplash.com/photo-1548013146-72479768bada?w=800",
+          "type": "hidden_object",
+          "description": "Khám phá di tích tôn giáo"
+        },
+        {
+          "id": "screen3",
+          "name": "Cảng Óc Eo",
+          "background": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+          "type": "hidden_object",
+          "description": "Tìm hàng hóa thương mại cổ"
+        },
+        {
+          "id": "screen4",
+          "name": "Khu luyện kim",
+          "background": "https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?w=800",
+          "type": "hidden_object",
+          "description": "Khám phá công nghệ luyện kim cổ"
+        }
+      ],
+      "clues": [
+        {
+          "id": "clue1",
+          "name": "Tượng Phật vàng",
+          "content": "Tượng Phật bằng vàng từ Ấn Độ",
+          "coordinates": {
+            "x": 30,
+            "y": 40,
+            "width": 10,
+            "height": 12
+          },
+          "points": 30,
+          "hint": "Tìm ở đền thờ cổ"
+        },
+        {
+          "id": "clue2",
+          "name": "Đồng tiền La Mã",
+          "content": "Đồng xu La Mã cổ đại",
+          "coordinates": {
+            "x": 65,
+            "y": 55,
+            "width": 8,
+            "height": 8
+          },
+          "points": 25,
+          "hint": "Gần khu chợ cổ"
+        },
+        {
+          "id": "clue3",
+          "name": "Bình gốm Ấn Độ",
+          "content": "Bình gốm từ thương nhân Ấn Độ",
+          "coordinates": {
+            "x": 50,
+            "y": 70,
+            "width": 10,
+            "height": 14
+          },
+          "points": 25,
+          "hint": "Ở kho hàng cảng"
+        },
+        {
+          "id": "clue4",
+          "name": "Sắt thỏi",
+          "content": "Thỏi sắt thời Óc Eo",
+          "coordinates": {
+            "x": 20,
+            "y": 65,
+            "width": 12,
+            "height": 10
+          },
+          "points": 20,
+          "hint": "Khu luyện kim"
+        }
+      ],
+      "artifact_ids": [
+        3
+      ],
+      "heritage_site_id": 4,
+      "quizzes": [
+        {
+          "id": "quiz1",
+          "question": "Văn minh Óc Eo phát triển từ thế kỷ nào?",
+          "options": [
+            "Thế kỷ 1-5",
+            "Thế kỷ 1-7",
+            "Thế kỷ 3-9",
+            "Thế kỷ 5-10"
+          ],
+          "correct_answer": 1,
+          "points": 25,
+          "hint": "Thời kỳ rất cổ xưa"
+        },
+        {
+          "id": "quiz2",
+          "question": "Óc Eo giao lưu với những quốc gia nào?",
+          "options": [
+            "Chỉ Trung Quốc",
+            "Ấn Độ và Trung Quốc",
+            "Ấn Độ, La Mã, Trung Quốc",
+            "Chỉ La Mã"
+          ],
+          "correct_answer": 2,
+          "points": 25,
+          "hint": "Trung tâm thương mại quốc tế"
+        },
+        {
+          "id": "quiz3",
+          "question": "Óc Eo là trung tâm gì?",
+          "options": [
+            "Trung tâm quân sự",
+            "Trung tâm thương mại",
+            "Trung tâm tôn giáo",
+            "Trung tâm học thuật"
+          ],
+          "correct_answer": 1,
+          "points": 20,
+          "hint": "Cảng biển quan trọng"
+        }
+      ],
+      "rewards": {
+        "petals": 3,
+        "coins": 200,
+        "character": "oceo_merchant"
+      },
+      "time_limit": 720,
+      "passing_score": 85,
+      "thumbnail": "https://images.unsplash.com/photo-1553484771-ee0bdc25ef14?w=400",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 5,
+      "chapter_id": 2,
+      "name": "Truyền thuyết Thánh Gióng",
+      "description": "Tìm hiểu câu chuyện anh hùng Thánh Gióng",
+      "type": "mixed",
+      "difficulty": "hard",
+      "order": 2,
+      "required_level": 4,
+      "background_image": "https://example.com/bg/giong-temple.jpg",
+      "background_music": "https://example.com/audio/hero-theme.mp3",
+      "ai_character_id": 3,
+      "knowledge_base": "Thánh Gióng:\n- Một trong Tứ Bất Tử của Việt Nam\n- Sinh ra từ dấu chân khổng lồ\n- 3 tuổi mới biết nói và đi\n- Cưỡi ngựa sắt đánh giặc Ân\n- Thăng thiên sau khi chiến thắng",
+      "screens": [
+        {
+          "id": "screen1",
+          "name": "Chiến trường",
+          "background": "https://example.com/bg/giong-temple.jpg",
+          "type": "mixed",
+          "description": "Tìm hiểu về cuộc chiến của Thánh Gióng"
+        },
+        {
+          "id": "screen2",
+          "name": "Làng Gióng",
+          "background": "https://example.com/bg/giong-village.jpg",
+          "type": "mixed",
+          "description": "Khám phá nơi Thánh Gióng sinh ra"
+        },
+        {
+          "id": "screen3",
+          "name": "Lò rèn thần kỳ",
+          "background": "https://example.com/bg/forge.jpg",
+          "type": "mixed",
+          "description": "Tìm hiểu cách rèn vũ khí"
+        },
+        {
+          "id": "screen4",
+          "name": "Núi Sóc",
+          "background": "https://example.com/bg/soc-mountain.jpg",
+          "type": "mixed",
+          "description": "Nơi Thánh Gióng thăng thiên"
+        }
+      ],
+      "clues": [
+        {
+          "id": "clue1",
+          "name": "Gươm sắt",
+          "content": "Thanh gươm sắt của Thánh Gióng",
+          "coordinates": {
+            "x": 40,
+            "y": 30,
+            "width": 15,
+            "height": 8
+          },
+          "points": 30,
+          "hint": "Vũ khí huyền thoại"
+        },
+        {
+          "id": "clue2",
+          "name": "Giáp sắt",
+          "content": "Bộ giáp sắt thần kỳ",
+          "coordinates": {
+            "x": 60,
+            "y": 45,
+            "width": 12,
+            "height": 18
+          },
+          "points": 30,
+          "hint": "Áo giáp bất bại"
+        },
+        {
+          "id": "clue3",
+          "name": "Ngựa sắt",
+          "content": "Ngựa sắt thần tốc",
+          "coordinates": {
+            "x": 25,
+            "y": 60,
+            "width": 20,
+            "height": 15
+          },
+          "points": 35,
+          "hint": "Thần kỵ của anh hùng"
+        }
+      ],
+      "artifact_ids": [],
+      "heritage_site_id": null,
+      "quizzes": [
+        {
+          "id": "quiz1",
+          "question": "Thánh Gióng thuộc nhóm thánh nào?",
+          "options": [
+            "Tứ Bất Tử",
+            "Tam Thánh",
+            "Ngũ Thánh",
+            "Thập Đại Thánh"
+          ],
+          "correct_answer": 0,
+          "points": 30,
+          "hint": "4 vị bất tử"
+        },
+        {
+          "id": "quiz2",
+          "question": "Thánh Gióng mấy tuổi mới biết nói?",
+          "options": [
+            "1 tuổi",
+            "2 tuổi",
+            "3 tuổi",
+            "4 tuổi"
+          ],
+          "correct_answer": 2,
+          "points": 25,
+          "hint": "Rất muộn so với trẻ bình thường"
+        },
+        {
+          "id": "quiz3",
+          "question": "Thánh Gióng cưỡi gì đánh giặc?",
+          "options": [
+            "Ngựa thường",
+            "Ngựa sắt",
+            "Voi",
+            "Rồng"
+          ],
+          "correct_answer": 1,
+          "points": 25,
+          "hint": "Thần kỵ làm bằng kim loại"
+        }
+      ],
+      "rewards": {
+        "petals": 3,
+        "coins": 250,
+        "character": "saint_giong"
+      },
+      "time_limit": 900,
+      "passing_score": 90,
+      "thumbnail": "https://example.com/thumb/giong.jpg",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 6,
+      "chapter_id": 3,
+      "name": "Văn Miếu - Quốc Tử Giám",
+      "description": "Khám phá ngôi trường đại học đầu tiên của Việt Nam",
+      "type": "quiz",
+      "difficulty": "easy",
+      "order": 1,
+      "required_level": 5,
+      "background_image": "https://images.unsplash.com/photo-1528127269322-539801943592?w=800",
+      "background_music": "https://example.com/audio/scholarly-theme.mp3",
+      "ai_character_id": 2,
+      "knowledge_base": "Văn Miếu - Quốc Tử Giám:\n- Được xây dựng năm 1070\n- Trường đại học đầu tiên của Việt Nam\n- Thờ Khổng Tử và các danh nhân\n- 82 bia tiến sĩ được UNESCO công nhận",
+      "screens": [
+        {
+          "id": "screen1",
+          "name": "Khuôn viên Văn Miếu",
+          "background": "https://images.unsplash.com/photo-1528127269322-539801943592?w=800",
+          "type": "QUIZ",
+          "description": "Trả lời câu hỏi về Văn Miếu - Quốc Tử Giám",
+          "options": [
+            {
+              "text": "1010",
+              "is_correct": false
+            },
+            {
+              "text": "1070",
+              "is_correct": true
+            },
+            {
+              "text": "1076",
+              "is_correct": false
+            },
+            {
+              "text": "1086",
+              "is_correct": false
+            }
+          ],
+          "reward": {
+            "points": 25
+          }
+        },
+        {
+          "id": "screen2",
+          "name": "Văn Miếu Môn",
+          "background": "https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800",
+          "type": "QUIZ",
+          "description": "Câu hỏi về kiến trúc cổng",
+          "options": [
+            {
+              "text": "Chu Văn An",
+              "is_correct": false
+            },
+            {
+              "text": "Lý Thánh Tông",
+              "is_correct": false
+            },
+            {
+              "text": "Khổng Tử",
+              "is_correct": true
+            },
+            {
+              "text": "Lê Thánh Tông",
+              "is_correct": false
+            }
+          ],
+          "reward": {
+            "points": 20
+          }
+        },
+        {
+          "id": "screen3",
+          "name": "Bia Tiến sĩ",
+          "background": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800",
+          "type": "QUIZ",
+          "description": "Tìm hiểu về các vị tiến sĩ",
+          "options": [
+            {
+              "text": "72",
+              "is_correct": false
+            },
+            {
+              "text": "82",
+              "is_correct": true
+            },
+            {
+              "text": "92",
+              "is_correct": false
+            },
+            {
+              "text": "102",
+              "is_correct": false
+            }
+          ],
+          "reward": {
+            "points": 25
+          }
+        },
+        {
+          "id": "screen4",
+          "name": "Đại Thành Môn",
+          "background": "https://images.unsplash.com/photo-1555169062-013468b47731?w=800",
+          "type": "QUIZ",
+          "description": "Câu hỏi về văn hóa nho giáo",
+          "options": [
+            {
+              "text": "Đúng",
+              "is_correct": true
+            },
+            {
+              "text": "Sai",
+              "is_correct": false
+            },
+            {
+              "text": "Không rõ",
+              "is_correct": false
+            },
+            {
+              "text": "Là trường cấp 2",
+              "is_correct": false
+            }
+          ],
+          "reward": {
+            "points": 20
+          }
+        }
+      ],
+      "clues": [
+        {
+          "id": "quiz1",
+          "name": "Câu hỏi 1",
+          "content": "Văn Miếu được xây dựng năm nào?",
+          "options": [
+            "1010",
+            "1070",
+            "1076",
+            "1086"
+          ],
+          "correct_answer": 1,
+          "points": 25,
+          "hint": "Sau 60 năm Thăng Long thành lập"
+        },
+        {
+          "id": "quiz2",
+          "name": "Câu hỏi 2",
+          "content": "Văn Miếu thờ ai?",
+          "options": [
+            "Chu Văn An",
+            "Lý Thánh Tông",
+            "Khổng Tử",
+            "Lê Thánh Tông"
+          ],
+          "correct_answer": 2,
+          "points": 20,
+          "hint": "Vị thánh của nho giáo"
+        },
+        {
+          "id": "quiz3",
+          "name": "Câu hỏi 3",
+          "content": "Có bao nhiêu bia tiến sĩ?",
+          "options": [
+            "72",
+            "82",
+            "92",
+            "102"
+          ],
+          "correct_answer": 1,
+          "points": 25,
+          "hint": "Con số này được UNESCO công nhận"
+        }
+      ],
+      "artifact_ids": [
+        4
+      ],
+      "heritage_site_id": 6,
+      "quizzes": [
+        {
+          "id": "quiz1",
+          "question": "Văn Miếu được xây dựng năm nào?",
+          "options": [
+            "1010",
+            "1070",
+            "1076",
+            "1086"
+          ],
+          "correct_answer": 1,
+          "points": 25,
+          "hint": "Sau 60 năm Thăng Long thành lập"
+        },
+        {
+          "id": "quiz2",
+          "question": "Văn Miếu thờ ai?",
+          "options": [
+            "Chu Văn An",
+            "Lý Thánh Tông",
+            "Khổng Tử",
+            "Lê Thánh Tông"
+          ],
+          "correct_answer": 2,
+          "points": 20,
+          "hint": "Vị thánh của nho giáo"
+        },
+        {
+          "id": "quiz3",
+          "question": "Có bao nhiêu bia tiến sĩ?",
+          "options": [
+            "72",
+            "82",
+            "92",
+            "102"
+          ],
+          "correct_answer": 1,
+          "points": 25,
+          "hint": "Con số này được UNESCO công nhận"
+        },
+        {
+          "id": "quiz4",
+          "question": "Văn Miếu là trường đại học đầu tiên của Việt Nam?",
+          "options": [
+            "Đúng",
+            "Sai",
+            "Không rõ",
+            "Là trường cấp 2"
+          ],
+          "correct_answer": 0,
+          "points": 20,
+          "hint": "Quốc Tử Giám"
+        }
+      ],
+      "rewards": {
+        "petals": 2,
+        "coins": 150,
+        "character": null
+      },
+      "time_limit": 300,
+      "passing_score": 70,
+      "thumbnail": "https://images.unsplash.com/photo-1528127269322-539801943592?w=400",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "collections": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "name": "Cổ vật thời Lý",
+      "description": "Bộ sưu tập các cổ vật đặc sắc thời Lý",
+      "visibility": "public",
+      "total_items": 2,
+      "heritage_site_ids": [
+        2,
+        5
+      ],
+      "artifact_ids": [
+        3
+      ],
+      "exhibition_ids": [],
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "scan_objects": [
+    {
+      "id": 1,
+      "code": "HOIAN001",
+      "name": "Chùa Cầu Hội An",
+      "type": "heritage_site",
+      "reference_id": 1,
+      "latitude": 15.8795,
+      "longitude": 108.3274,
+      "reward_coins": 200,
+      "reward_petals": 2,
+      "reward_character": "guardian_hoian",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "code": "ARTIFACT001",
+      "name": "Bức tranh Hội An",
+      "type": "artifact",
+      "reference_id": 1,
+      "latitude": 15.8801,
+      "longitude": 108.3288,
+      "reward_coins": 150,
+      "reward_petals": 1,
+      "reward_character": null,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "code": "HANOI001",
+      "name": "Hoàng Thành Thăng Long",
+      "type": "heritage_site",
+      "reference_id": 2,
+      "latitude": 21.0341,
+      "longitude": 105.8372,
+      "reward_coins": 180,
+      "reward_petals": 2,
+      "reward_character": null,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 4,
+      "code": "OCEO001",
+      "name": "Khu khảo cổ Óc Eo",
+      "type": "heritage_site",
+      "reference_id": 4,
+      "latitude": 10.1333,
+      "longitude": 104.7667,
+      "reward_coins": 250,
+      "reward_petals": 3,
+      "reward_character": "oceo_archaeologist",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "shop_items": [
+    {
+      "id": 1,
+      "name": "Gợi ý thông minh",
+      "description": "Nhận gợi ý từ AI về manh mối đang tìm",
+      "type": "hint",
+      "price": 10,
+      "icon": "💡",
+      "effect": "reveal_hint",
+      "is_consumable": true,
+      "max_stack": 99,
+      "is_available": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Tăng tốc 2x",
+      "description": "Tăng gấp đôi điểm trong 5 phút",
+      "type": "boost",
+      "price": 50,
+      "icon": "⚡",
+      "effect": "double_points_5min",
+      "is_consumable": true,
+      "max_stack": 10,
+      "is_available": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Trang phục chú Tễu vàng",
+      "description": "Skin đặc biệt cho chú Tễu",
+      "type": "character_skin",
+      "price": 500,
+      "icon": "👘",
+      "effect": "change_skin_teu_gold",
+      "is_consumable": false,
+      "max_stack": 1,
+      "is_available": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 4,
+      "name": "Đèn lồng trang trí",
+      "description": "Trang trí bảo tàng của bạn",
+      "type": "decoration",
+      "price": 200,
+      "icon": "🏮",
+      "effect": "museum_decoration",
+      "is_consumable": false,
+      "max_stack": 10,
+      "is_available": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 5,
+      "name": "Bùa may mắn",
+      "description": "Tăng tỷ lệ tìm thấy vật phẩm hiếm",
+      "type": "boost",
+      "price": 100,
+      "icon": "🍀",
+      "effect": "increase_rare_drop",
+      "is_consumable": true,
+      "max_stack": 5,
+      "is_available": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "game_badges": [
+    {
+      "id": 1,
+      "name": "Nhà thám hiểm",
+      "description": "Hoàn thành chapter đầu tiên",
+      "icon": "🗺️",
+      "requirement": "complete_chapter_1",
+      "rarity": "common",
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Bậc thầy lịch sử",
+      "description": "Hoàn thành tất cả các màn lịch sử",
+      "icon": "📜",
+      "requirement": "complete_all_history_levels",
+      "rarity": "rare",
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Người sưu tầm",
+      "description": "Thu thập 10 nhân vật",
+      "icon": "🎭",
+      "requirement": "collect_10_characters",
+      "rarity": "epic",
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 4,
+      "name": "Thám tử lão luyện",
+      "description": "Tìm được tất cả manh mối không cần gợi ý",
+      "icon": "🔍",
+      "requirement": "find_all_clues_no_hints",
+      "rarity": "epic",
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 5,
+      "name": "Bậc thầy tri thức",
+      "description": "Trả lời đúng 50 câu hỏi",
+      "icon": "🎓",
+      "requirement": "answer_50_questions",
+      "rarity": "rare",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "game_achievements": [
+    {
+      "id": 1,
+      "name": "Bước đầu tiên",
+      "description": "Hoàn thành màn chơi đầu tiên",
+      "type": "level_completion",
+      "requirement": {
+        "levels_completed": 1
+      },
+      "reward_coins": 50,
+      "icon": "🌟",
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Hoa sen nở rộ",
+      "description": "Thu thập 20 cánh hoa sen",
+      "type": "collection",
+      "requirement": {
+        "total_petals": 20
+      },
+      "reward_coins": 200,
+      "icon": "🌸",
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Chuyên gia quét mã",
+      "description": "Quét 5 QR code tại di tích thực tế",
+      "type": "scan",
+      "requirement": {
+        "scans_count": 5
+      },
+      "reward_coins": 300,
+      "reward_character": "scanner_master",
+      "icon": "📱",
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 4,
+      "name": "Người hùng",
+      "description": "Hoàn thành cả 3 chapters",
+      "type": "chapter_completion",
+      "requirement": {
+        "chapters_completed": 3
+      },
+      "reward_coins": 500,
+      "icon": "🏆",
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 5,
+      "name": "Giàu có",
+      "description": "Sở hữu 10,000 coins",
+      "type": "currency",
+      "requirement": {
+        "total_coins": 10000
+      },
+      "reward_coins": 1000,
+      "icon": "💰",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "game_progress": [
+    {
+      "id": 1,
+      "user_id": 3,
+      "current_chapter": 3,
+      "total_sen_petals": 0,
+      "total_points": 0,
+      "level": 1,
+      "coins": 1000,
+      "unlocked_chapters": [
+        1,
+        2,
+        3
+      ],
+      "completed_levels": [],
+      "collected_characters": [],
+      "badges": [],
+      "achievements": [],
+      "museum_open": false,
+      "museum_income": 0,
+      "streak_days": 0,
+      "last_login": "2025-12-03T07:36:29.597Z",
+      "created_at": "2025-12-03T07:36:29.597Z"
+    }
+  ],
+  "game_sessions": [
+    {
+      "id": 1,
+      "user_id": 3,
+      "level_id": "4",
+      "status": "expired",
+      "current_screen_id": "screen4",
+      "current_screen_index": 3,
+      "collected_items": [],
+      "answered_questions": [],
+      "timeline_order": [],
+      "score": 0,
+      "total_screens": 1,
+      "completed_screens": [
+        "screen1",
+        "screen2",
+        "screen3"
+      ],
+      "screen_states": {},
+      "time_spent": 0,
+      "hints_used": 0,
+      "started_at": "2025-12-03T07:49:01.618Z",
+      "last_activity": "2025-12-03T08:04:45.868Z",
+      "expired_at": "2025-12-27T18:34:56.138Z",
+      "expired_reason": "Session timeout (24 hours inactive)"
+    },
+    {
+      "id": 2,
+      "user_id": 3,
+      "level_id": "4",
+      "status": "expired",
+      "current_screen_id": "screen1",
+      "current_screen_index": 0,
+      "collected_items": [],
+      "answered_questions": [],
+      "timeline_order": [],
+      "score": 0,
+      "total_screens": 1,
+      "completed_screens": [],
+      "screen_states": {},
+      "time_spent": 0,
+      "hints_used": 0,
+      "started_at": "2025-12-03T07:51:06.697Z",
+      "last_activity": "2025-12-03T07:51:06.697Z",
+      "expired_at": "2025-12-27T18:34:56.138Z",
+      "expired_reason": "Session timeout (24 hours inactive)"
+    },
+    {
+      "id": 3,
+      "user_id": 3,
+      "level_id": "4",
+      "status": "expired",
+      "current_screen_id": "screen1",
+      "current_screen_index": 0,
+      "collected_items": [],
+      "answered_questions": [],
+      "timeline_order": [],
+      "score": 0,
+      "total_screens": 4,
+      "completed_screens": [],
+      "screen_states": {},
+      "time_spent": 0,
+      "hints_used": 0,
+      "started_at": "2025-12-03T07:53:16.789Z",
+      "last_activity": "2025-12-03T07:53:16.789Z",
+      "expired_at": "2025-12-27T18:34:56.139Z",
+      "expired_reason": "Session timeout (24 hours inactive)"
+    },
+    {
+      "id": 4,
+      "user_id": 3,
+      "level_id": "6",
+      "status": "expired",
+      "current_screen_id": "screen4",
+      "current_screen_index": 3,
+      "collected_items": [],
+      "answered_questions": [],
+      "timeline_order": [],
+      "score": 0,
+      "total_screens": 4,
+      "completed_screens": [
+        "screen1",
+        "screen2",
+        "screen3"
+      ],
+      "screen_states": {},
+      "time_spent": 0,
+      "hints_used": 0,
+      "started_at": "2025-12-03T08:07:19.601Z",
+      "last_activity": "2025-12-03T08:13:23.217Z",
+      "expired_at": "2025-12-27T18:34:56.156Z",
+      "expired_reason": "Session timeout (24 hours inactive)"
+    },
+    {
+      "id": 5,
+      "user_id": 3,
+      "level_id": "6",
+      "status": "expired",
+      "current_screen_id": "screen1",
+      "current_screen_index": 0,
+      "collected_items": [],
+      "answered_questions": [],
+      "timeline_order": [],
+      "score": 0,
+      "total_screens": 4,
+      "completed_screens": [],
+      "screen_states": {},
+      "time_spent": 0,
+      "hints_used": 0,
+      "started_at": "2025-12-03T08:14:15.232Z",
+      "last_activity": "2025-12-03T08:14:15.232Z",
+      "expired_at": "2025-12-27T18:34:56.174Z",
+      "expired_reason": "Session timeout (24 hours inactive)"
+    },
+    {
+      "id": 6,
+      "user_id": 3,
+      "level_id": "6",
+      "status": "expired",
+      "current_screen_id": "screen1",
+      "current_screen_index": 0,
+      "collected_items": [],
+      "answered_questions": [],
+      "timeline_order": [],
+      "score": 0,
+      "total_screens": 4,
+      "completed_screens": [],
+      "screen_states": {},
+      "time_spent": 0,
+      "hints_used": 0,
+      "started_at": "2025-12-03T08:15:25.529Z",
+      "last_activity": "2025-12-03T08:15:25.529Z",
+      "expired_at": "2025-12-27T18:34:56.184Z",
+      "expired_reason": "Session timeout (24 hours inactive)"
+    },
+    {
+      "id": 7,
+      "user_id": 3,
+      "level_id": "6",
+      "status": "expired",
+      "current_screen_id": "screen1",
+      "current_screen_index": 0,
+      "collected_items": [],
+      "answered_questions": [],
+      "timeline_order": [],
+      "score": 0,
+      "total_screens": 4,
+      "completed_screens": [],
+      "screen_states": {},
+      "time_spent": 0,
+      "hints_used": 0,
+      "started_at": "2025-12-03T08:19:25.067Z",
+      "last_activity": "2025-12-03T08:19:25.067Z",
+      "expired_at": "2025-12-27T18:34:56.204Z",
+      "expired_reason": "Session timeout (24 hours inactive)"
+    },
+    {
+      "id": 8,
+      "user_id": 3,
+      "level_id": "6",
+      "status": "expired",
+      "current_screen_id": "screen2",
+      "current_screen_index": 1,
+      "collected_items": [],
+      "answered_questions": [
+        {
+          "screen_id": "screen1",
+          "answer": "1070",
+          "is_correct": true,
+          "points": 25,
+          "answered_at": "2025-12-03T08:25:30.679Z"
+        }
+      ],
+      "timeline_order": [],
+      "score": 25,
+      "total_screens": 4,
+      "completed_screens": [
+        "screen1"
+      ],
+      "screen_states": {},
+      "time_spent": 0,
+      "hints_used": 0,
+      "started_at": "2025-12-03T08:23:43.548Z",
+      "last_activity": "2025-12-03T08:25:35.044Z",
+      "expired_at": "2025-12-27T18:34:56.226Z",
+      "expired_reason": "Session timeout (24 hours inactive)"
+    }
+  ]
+}
