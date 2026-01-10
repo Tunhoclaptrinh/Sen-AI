@@ -8,7 +8,7 @@ redis
 edge-tts
 langdetect
 sentence-transformers
-semantic-router
 langchain-text-splitters
 pymongo
 dnspython
+semantic-router
