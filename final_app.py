@@ -23,7 +23,7 @@ from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharac
 from vector_db import VectorDatabase
 from reflection import Reflection
 from my_semantic_logic.route import Route
-from my_semantic_logic.router import SemanticRouter
+from semantic_router.layer import RouteLayer
 from semantic_router.encoders import OpenAIEncoder # Dùng encoder của OpenAI cho nhẹ
 
 # ====== 1. CẤU HÌNH GLOBAL ======
@@ -99,7 +99,7 @@ routes = [
     Route(name="chitchat", samples=chitchatSample),
 ]
 # Router dùng OpenAIEncoder nên khởi động mất 1 giây
-router = SemanticRouter(encoder=encoder, routes=routes, threshold=0.6)
+router = RouteLayer(encoder=encoder, routes=routes)
 
 # ====== 4. MODELS ======
 class ChatRequest(BaseModel):
