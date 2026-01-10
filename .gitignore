@@ -1,0 +1,21 @@
+# Thông tin bảo mật (CỰC KỲ QUAN TRỌNG)
+.env
+
+# Thư mục ảo của Python
+venv/
+.venv/
+env/
+
+# Python cache (giúp Repo sạch hơn)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# File hệ thống
+.DS_Store
+Thumbs.db
+
+# Dữ liệu cục bộ (nếu có)
+vector_db_data/
+*.log
