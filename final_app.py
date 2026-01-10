@@ -93,12 +93,24 @@ async def auto_ingest_data(v_db: VectorDatabase, client: AsyncOpenAI):
 
 # ====== 3. ROUTER ======
 from my_semantic_logic.samples import roiNuocSample, hoangThanhSample, chitchatSample
+# ====== 3. ROUTER ======
+# Nhớ dùng utterances thay vì samples nhé Hiếu!
 routes = [
-    Route(name="roi_nuoc", samples=roiNuocSample),
-    Route(name="hoang_thanh", samples=hoangThanhSample),
-    Route(name="chitchat", samples=chitchatSample),
+    Route(
+        name="roi_nuoc", 
+        utterances=roiNuocSample  # <-- Sửa chữ samples thành utterances
+    ),
+    Route(
+        name="hoang_thanh", 
+        utterances=hoangThanhSample # <-- Sửa ở đây nữa
+    ),
+    Route(
+        name="chitchat", 
+        utterances=chitchatSample   # <-- Và ở đây nữa
+    ),
 ]
-# Router dùng OpenAIEncoder nên khởi động mất 1 giây
+
+# Sau đó khởi tạo Layer như cũ
 router = RouteLayer(encoder=encoder, routes=routes)
 
 # ====== 4. MODELS ======
