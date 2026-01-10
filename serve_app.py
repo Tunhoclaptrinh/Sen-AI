@@ -3,20 +3,19 @@ import base64
 import re
 import json
 import logging
-import asyncio
 from typing import List, Dict, Optional
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from openai import AsyncOpenAI, OpenAI 
+from openai import AsyncOpenAI 
 import redis.asyncio as redis 
 from edge_tts import Communicate
 from langdetect import detect
+from sentence_transformers import SentenceTransformer
 
-# Các bộ chia nhỏ văn bản
+# Các bộ chia nhỏ văn bản (Cần thiết cho Ingest)
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 
 # Module tùy chỉnh của Hiếu
@@ -24,7 +23,7 @@ from vector_db import VectorDatabase
 from reflection import Reflection
 from semantic_router.route import Route
 from semantic_router.router import SemanticRouter
-from semantic_router.encoders import OpenAIEncoder # Dùng encoder của OpenAI cho nhẹ
+import semantic_router.samples as samples
 
 # ====== 1. CẤU HÌNH GLOBAL ======
 load_dotenv()
@@ -34,11 +33,9 @@ logger = logging.getLogger(__name__)
 DB_NAME = "vector_db"
 COLLECTION_NAME = "culture"
 REDIS_URL = os.getenv("REDIS_URL")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Khởi tạo Encoder OpenAI cho Router (Cực nhẹ, không tốn RAM)
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-encoder = OpenAIEncoder(name="text-embedding-3-small")
+# Model 384 chiều dùng cho cả Router và Search
+local_embedder = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 
 # Đường dẫn file dữ liệu
 CULTURE_FILES = [
@@ -48,17 +45,23 @@ CULTURE_FILES = [
 
 # ====== 2. HÀM HỖ TRỢ NẠP DỮ LIỆU & LOGIC HYBRID ======
 
-async def get_openai_embedding(text: str, client: AsyncOpenAI) -> List[float]:
-    """Lấy vector từ OpenAI thay vì dùng model nội bộ"""
-    text = text.replace("\n", " ")
-    response = await client.embeddings.create(input=[text], model="text-embedding-3-small")
-    return response.data[0].embedding
-
 def simple_keyword_score(content: str, rewritten_query: str) -> float:
+    """
+    [MỚI BỔ SUNG] 
+    Tính điểm thưởng dựa trên mức độ trùng lặp từ vựng giữa câu hỏi và nội dung.
+    """
     content_lower = content.lower()
+    # Tách từ, bỏ qua các từ quá ngắn (như 'là', 'ở', 'có')
     query_words = [w for w in rewritten_query.lower().split() if len(w) > 2]
-    if not query_words: return 0.0
-    matched_count = sum(1 for word in query_words if word in content_lower)
+    
+    if not query_words:
+        return 0.0
+    
+    matched_count = 0
+    for word in query_words:
+        if word in content_lower:
+            matched_count += 1
+            
     return matched_count / len(query_words)
 
 def chunk_markdown(md_text: str) -> List[Dict]:
@@ -69,37 +72,38 @@ def chunk_markdown(md_text: str) -> List[Dict]:
     docs = splitter2.split_documents(sections)
     return [{"content": d.page_content.strip(), "metadata": d.metadata} for d in docs if d.page_content.strip()]
 
-async def auto_ingest_data(v_db: VectorDatabase, client: AsyncOpenAI):
-    """SỬA ĐỔI: Dùng OpenAI để nạp dữ liệu"""
+def auto_ingest_data(v_db: VectorDatabase):
+    """Kiểm tra và tự động nạp dữ liệu 384 chiều nếu DB trống"""
     for culture_type, file_path in CULTURE_FILES:
         if v_db.count_documents(COLLECTION_NAME, {"culture_type": culture_type}) == 0:
             if os.path.exists(file_path):
-                logger.info(f"🔄 Đang nạp lại dữ liệu OpenAI (1536 dim) cho: {culture_type}")
+                logger.info(f"🔄 Đang nạp lại dữ liệu 384 chiều cho: {culture_type}")
                 with open(file_path, "r", encoding="utf-8") as f:
                     md_content = f.read()
                 
                 chunks = chunk_markdown(md_content)
-                docs_to_insert = []
-                for c in chunks:
-                    vec = await get_openai_embedding(c["content"], client)
-                    docs_to_insert.append({
+                vectors = local_embedder.encode([c["content"] for c in chunks]).tolist()
+                
+                docs_to_insert = [
+                    {
                         "content": c["content"],
-                        "embedding": vec,
+                        "embedding": vectors[i],
                         "culture_type": culture_type,
                         "metadata": c["metadata"]
-                    })
+                    } for i, c in enumerate(chunks)
+                ]
                 v_db.insert_many(COLLECTION_NAME, docs_to_insert)
                 logger.info(f"✅ Đã nạp xong {len(docs_to_insert)} đoạn cho {culture_type}")
+            else:
+                logger.warning(f"⚠️ Không tìm thấy file {file_path}")
 
 # ====== 3. ROUTER ======
-from semantic_router.samples import roiNuocSample, hoangThanhSample, chitchatSample
 routes = [
-    Route(name="roi_nuoc", samples=roiNuocSample),
-    Route(name="hoang_thanh", samples=hoangThanhSample),
-    Route(name="chitchat", samples=chitchatSample),
+    Route(name="roi_nuoc", samples=samples.roiNuocSample, filter_dict={"culture_type": "mua_roi_nuoc"}),
+    Route(name="hoang_thanh", samples=samples.hoangThanhSample, filter_dict={"culture_type": "hoang_thanh"}),
+    Route(name="chitchat", samples=samples.chitchatSample, filter_dict={}),
 ]
-# Router dùng OpenAIEncoder nên khởi động mất 1 giây
-router = SemanticRouter(encoder=encoder, routes=routes, threshold=0.6)
+router = SemanticRouter(embedding=local_embedder, routes=routes, threshold=0.5)
 
 # ====== 4. MODELS ======
 class ChatRequest(BaseModel):
@@ -117,30 +121,21 @@ class ChatResponse(BaseModel):
 # ====== 5. LIFESPAN ======
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if not REDIS_URL: raise ValueError("❌ Lỗi: REDIS_URL chưa có")
-    
+    if not REDIS_URL:
+        raise ValueError("❌ Lỗi: REDIS_URL chưa được khai báo trong .env")
+        
     app.state.redis = redis.from_url(REDIS_URL, decode_responses=True)
-    app.state.openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+    app.state.openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     app.state.reflector = Reflection(llm_client=app.state.openai_client)
     
-    # Tự động nạp dữ liệu OpenAI khi khởi động
-    await auto_ingest_data(vector_db, app.state.openai_client)
+    # auto_ingest_data(vector_db)
     yield
     await app.state.redis.close()
 
 app = FastAPI(title="Heritage NPC API", lifespan=lifespan)
-
-# THÊM CORS ĐỂ FRONTEND TRUY CẬP ĐƯỢC
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 vector_db = VectorDatabase(db_name=DB_NAME)
 
-# ====== 6. UTILS (TTS) ======
+# ====== 6. UTILS ======
 async def generate_audio_async(text: str) -> str:
     try:
         clean_text = re.sub(r'[*_#]', '', text).strip()
@@ -166,47 +161,57 @@ async def process_query(request: ChatRequest):
         user_input = request.user_input.strip()
         history = request.history[-5:]
 
-        # 1. Router
-        guide_res = router(user_input)
-        route_name = guide_res.name if guide_res.name else "uncertain"
-        score = 1.0 # SemanticRouter mới trả về object
+        # 1. Router câu gốc
+        score_raw, route_name, filter_dict = router.guide(user_input)
+        score = float(score_raw.item()) if hasattr(score_raw, 'item') else float(score_raw)
 
         # 2. Xử lý Chitchat sớm
-        if route_name == "chitchat":
+        if score > 0.7 and route_name in ("uncertain", "chitchat"):
             ans = "Chào bạn! Mình là Minh. Bạn cần mình giúp gì về văn hóa Việt Nam không?"
             return ChatResponse(answer=ans, rewritten_query=user_input, route=route_name, score=score, audio_base64=await generate_audio_async(ans))
 
-        # 3. Rewrite câu hỏi
+        # 3. Rewrite câu hỏi (GPT fix không dấu, lỗi chính tả ở đây)
         rewritten = await reflector.rewrite(history, user_input)
         
         # 4. Check Cache
         cache_key = f"cache:{rewritten.lower()}"
         cached_data = await redis_conn.get(cache_key)
-        if cached_data: return ChatResponse(**json.loads(cached_data))
+        if cached_data:
+            logger.info("🚀 Cache Hit!")
+            return ChatResponse(**json.loads(cached_data))
 
-        # 5. HYBRID RAG
-        # Bước A: Lấy OpenAI Embedding cho câu hỏi
-        q_vec = await get_openai_embedding(rewritten, client)
+        # 5. [NÂNG CẤP] HYBRID RAG PIPELINE (Vector + Keyword)
         
-        # Bước B: Tìm kiếm Vector (Giờ là 1536 chiều)
-        candidates = vector_db.query(COLLECTION_NAME, q_vec, limit=10)
+        
+        # Bước A: Tìm kiếm Vector (Lấy 10 ứng viên)
+        q_vec = local_embedder.encode([rewritten])[0].tolist()
+        candidates = vector_db.query(COLLECTION_NAME, q_vec, limit=10, filter_dict=filter_dict)
         
         if not candidates:
             ans = "Tiếc quá, hiện tại mình chưa có thông tin về phần này."
             return ChatResponse(answer=ans, rewritten_query=rewritten, route=route_name, score=score, audio_base64=await generate_audio_async(ans))
 
-        # Bước C: Reranking
+        # Bước B: Reranking bằng Keyword Score
         for res in candidates:
-            res['hybrid_score'] = res.get('score', 0) + (simple_keyword_score(res['content'], rewritten) * 0.15) 
+            v_score = res.get('score', 0)  # Điểm tương đồng từ Vector DB
+            k_score = simple_keyword_score(res['content'], rewritten) # Điểm khớp từ khóa
+            
+            # Tính điểm lai: Vector đóng góp chính, Keyword cộng thêm điểm thưởng
+            res['hybrid_score'] = v_score + (k_score * 0.15) 
 
+        # Bước C: Sắp xếp lại danh sách theo điểm Hybrid
         candidates.sort(key=lambda x: x['hybrid_score'], reverse=True)
-        context = "\n\n".join([r["content"] for r in candidates[:3]])
+        
+        # Bước D: Lấy Top 3 đoạn Context sát ý nhất
+        top_3_results = candidates[:3]
+        context = "\n\n".join([r["content"] for r in top_3_results])
+        logger.info(f"✅ Hybrid Search thành công. Top score: {candidates[0]['hybrid_score']:.2f}")
 
-        # 6. Generate Answer
+        # 6. Generate Answer (GPT-4o-mini)
         final_res = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Bạn là NPC tên Minh. Trả lời thân thiện dựa trên CONTEXT. Nếu không có thông tin, hãy xin lỗi."},
+                {"role": "system", "content": "Bạn là NPC tên Minh. Trả lời thân thiện dựa trên CONTEXT được cung cấp. Nếu không có trong context, hãy xin lỗi khéo léo."},
                 {"role": "user", "content": f"CONTEXT:\n{context}\n\nQ: {rewritten}"}
             ],
             temperature=0.3
@@ -219,6 +224,7 @@ async def process_query(request: ChatRequest):
             score=score, audio_base64=audio_b64, context_used=context[:150] + "..."
         )
 
+        # 7. Lưu cache (Hết hạn sau 1 tiếng)
         await redis_conn.setex(cache_key, 3600, response_data.model_dump_json())
         return response_data
 
@@ -226,12 +232,15 @@ async def process_query(request: ChatRequest):
         logger.error(f"❌ Server Error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+# 1. Thêm cái này TRƯỚC khối __main__
 @app.get("/")
 async def root():
-    return {"message": "NPC Minh API is online!", "mode": "OpenAI-Lightweight"}
+    return {
+        "message": "NPC Minh API is running!",
+        "status": "online",
+        "author": "Hieu"
+    }
 
 if __name__ == "__main__":
     import uvicorn
-    import os
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

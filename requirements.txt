@@ -7,7 +7,6 @@ openai
 redis
 edge-tts
 langdetect
-sentence-transformers
 langchain-text-splitters
 pymongo
 dnspython

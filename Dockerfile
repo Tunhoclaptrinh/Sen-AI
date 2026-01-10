@@ -23,10 +23,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir torch --extra-index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
-# 5. [PRE-DOWNLOAD] Tải sẵn model 384 chiều ngay lúc build image
-# Giúp server khởi động nhanh hơn và không bị lỗi Timeout trên Render
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')"
-
 # 6. Sao chép toàn bộ code vào Docker
 COPY . .
 
