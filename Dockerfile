@@ -34,4 +34,4 @@ COPY . .
 EXPOSE 10000
 
 # 8. Lệnh khởi chạy: 1 Worker để dành trọn RAM cho Model
-CMD ["gunicorn", "-w", "1", "-k", uvicorn.workers.UvicornWorker", "test:app", "--bind", "0.0.0.0:10000", "--timeout", "120"]
+CMD ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "final_app:app", "--bind", "0.0.0.0:10000", "--timeout", "120"]
