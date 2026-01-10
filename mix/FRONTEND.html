@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Voice Chat Real-Time Test</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; line-height: 1.6; }
+        #chat-output { min-height: 100px; border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; white-space: pre-wrap; background: #f9f9f9; }
+        .status { margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🎤 AI Voice Chat (Real-Time TTS)</h1>
+    <p>Sử dụng WebSockets để stream văn bản và âm thanh cùng lúc.</p>
+
+    <textarea id="user-prompt" placeholder="Nhập câu hỏi của bạn..." rows="3" style="width: 100%;"></textarea>
+    <button onclick="startChat()" id="send-btn">Gửi và Nghe</button>
+    
+    <div class="status" id="status-message">Trạng thái: Đã sẵn sàng</div>
+
+    <h2>Phản hồi của AI:</h2>
+    <div id="chat-output"></div>
+
+    <script>
+        // --- Web Audio API Setup ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        let audioQueue = [];
+        let isPlaying = false;
+        let ws = null;
+
+        // Xử lý và phát các khối âm thanh trong hàng đợi
+        async function processQueue() {
+            if (audioQueue.length === 0 || isPlaying) {
+                return;
+            }
+
+            isPlaying = true;
+            const audioData = audioQueue.shift();
+            
+            try {
+                // Giải mã dữ liệu âm thanh nhị phân
+                const audioBuffer = await audioCtx.decodeAudioData(audioData);
+                const source = audioCtx.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioCtx.destination);
+                source.start(0);
+
+                // Chờ cho đoạn âm thanh này phát xong trước khi phát đoạn tiếp theo
+                await new Promise(resolve => {
+                    source.onended = () => {
+                        isPlaying = false;
+                        resolve();
+                        // Gọi lại processQueue để phát khối tiếp theo ngay lập tức
+                        processQueue(); 
+                    };
+                });
+
+            } catch (error) {
+                console.error("Error decoding audio data:", error);
+                isPlaying = false;
+                processQueue(); // Thử phát khối tiếp theo
+            }
+        }
+
+        // --- WebSocket Logic ---
+        function startChat() {
+            const prompt = document.getElementById('user-prompt').value;
+            const outputDiv = document.getElementById('chat-output');
+            const statusDiv = document.getElementById('status-message');
+            const sendBtn = document.getElementById('send-btn');
+            
+            if (!prompt) return;
+
+            // Xóa nội dung cũ và reset trạng thái
+            outputDiv.innerHTML = '';
+            statusDiv.textContent = 'Trạng thái: Đang kết nối...';
+            sendBtn.disabled = true;
+            audioQueue = [];
+            isPlaying = false;
+            
+            // Lấy địa chỉ host hiện tại
+            const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+            const wsUrl = wsProtocol + window.location.host + "/ws/voice_chat";
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                statusDiv.textContent = 'Trạng thái: Đã kết nối, đang gửi prompt...';
+                // Gửi prompt tới backend
+                ws.send("PROMPT:" + prompt);
+            };
+
+            ws.onmessage = async (event) => {
+                if (typeof event.data === 'string') {
+                    // Nhận văn bản stream
+                    const data = event.data;
+                    if (data.startsWith('TEXT:')) {
+                        const token = data.substring(5);
+                        outputDiv.innerHTML += token;
+                        statusDiv.textContent = 'Trạng thái: Streaming Văn bản...';
+                    } else if (data.startsWith('ERROR:')) {
+                        statusDiv.textContent = data;
+                        sendBtn.disabled = false;
+                    }
+                } else if (event.data instanceof Blob) {
+                    // Nhận khối âm thanh nhị phân
+                    statusDiv.textContent = 'Trạng thái: Streaming Âm thanh...';
+                    const arrayBuffer = await event.data.arrayBuffer();
+                    audioQueue.push(arrayBuffer);
+                    if (!isPlaying) {
+                        processQueue();
+                    }
+                }
+            };
+
+            ws.onclose = () => {
+                statusDiv.textContent = 'Trạng thái: Kết thúc.';
+                sendBtn.disabled = false;
+            };
+
+            ws.onerror = (error) => {
+                console.error("WebSocket Error:", error);
+                statusDiv.textContent = 'Trạng thái: Lỗi kết nối WebSocket.';
+                sendBtn.disabled = false;
+            };
+        }
+    </script>
+</body>
+</html>

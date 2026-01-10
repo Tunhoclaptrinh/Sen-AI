@@ -11,4 +11,3 @@ sentence-transformers
 langchain-text-splitters
 pymongo
 dnspython
-semantic-router==0.0.20

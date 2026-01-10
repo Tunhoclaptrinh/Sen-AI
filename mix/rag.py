@@ -1,0 +1,103 @@
+from embeddings import Embeddings
+from vector_db import VectorDatabase
+import pandas as pd
+
+def build_combine_row(row):
+    combine = f"Tên sản phẩm: {row['title']}\n"
+    combine += f"Mô tả: {row['product_specs']}\n"
+    combine += f"Giá: {row['current_price']}\n"
+    combine += f"Ưu đãi: {row['product_promotion']}\n"
+    combine += f"Màu sắc: {row['color_options']}\n"
+    return combine
+
+def main():
+    df = pd.read_csv("hoanghamobile.csv")
+    df['information'] = df.apply(build_combine_row, axis=1)
+
+    vector_db = VectorDatabase(db_type="mongodb")
+    # vector_db.client.delete_collection("products") Uncomment if db_type = "qdrant" and you want to reset the collection
+    embedding = Embeddings(model_name="text-embedding-3-small", type="openai")
+
+    inserted_count = 0
+    for index, row in df.iterrows():
+        title = row['title']
+        if not vector_db.document_exists("products", {"title": title}):
+            doc = row['information']
+            embedding_vector = embedding.encode(doc)
+            vector_db.insert_document(
+                collection_name="products",
+                document={
+                    "title": title,
+                    "embedding": embedding_vector,
+                    "information": doc
+                }
+            )
+            inserted_count += 1
+            print(f"Inserted document {index + 1}/{len(df)}: {title}")
+    if inserted_count == 0:
+        print("All documents already exist in the vector database, skipping insertion.")
+    else:
+        print(f"Inserted {inserted_count} new documents.")
+
+    # Query + RAG
+
+    messages = [
+        {"role": "system", "content": """Bạn là một nhân viên tư vấn bán hàng chuyên nghiệp tại cửa hàng Quang Đạt Phone. Xưng em và xưng khách hàng là anh/chị. Đôi khi sử dụng icon emoji trong câu trả lời. Nhiệm vụ của bạn là trả lời các câu hỏi của khách hàng một cách rõ ràng, thân thiện và dựa hoàn toàn vào các thông tin sản phẩm được cung cấp bên dưới.
+        Chỉ sử dụng thông tin có trong dữ liệu. Không tự tạo ra thông tin nếu không được cung cấp.
+        Nếu không tìm thấy câu trả lời, hãy lịch sự trả lời rằng hiện tại bạn chưa có đủ thông tin để tư vấn chính xác.
+        Hãy ưu tiên ngắn gọn, dễ hiểu. Nếu khách hỏi gợi ý sản phẩm, hãy liệt kê một vài mẫu phù hợp và lý do tại sao nên chọn.
+        Luôn giữ thái độ lịch sự, chuyên nghiệp và hỗ trợ hết mình."""}
+    ]
+
+    while True:
+        query = input("Nhập câu hỏi: ")
+
+        if query.lower() == "quit":
+            print("Goodbye!")
+            break
+
+        # Encode query và RAG
+        query_embedding = embedding.encode(query)
+        results = vector_db.query("products", query_embedding, limit=5)
+
+        context = ""
+        for r in results:
+            context += f"{r['information']}\n"
+
+        full_prompt = f"""
+    Câu hỏi: {query}
+    Dữ liệu sản phẩm liên quan:
+    {context}
+    """
+
+        # Lưu user message
+        messages.append({"role": "user", "content": full_prompt})
+
+        # Gọi LLM
+        answer = embedding.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages
+        )
+
+        bot_reply = answer.choices[0].message.content
+        print("Bot:", bot_reply)
+
+        # Lưu assistant message
+        messages.append({"role": "assistant", "content": bot_reply})
+if __name__ == "__main__":
+    main()
+
+# SQL commands to create the necessary table and index in Supabase
+# -- First, enable the vector extension
+# CREATE EXTENSION IF NOT EXISTS vector;
+
+# -- Then create the table
+# CREATE TABLE IF NOT EXISTS products (
+#     id SERIAL PRIMARY KEY,
+#     title TEXT NOT NULL UNIQUE,
+#     information TEXT,
+#     embedding VECTOR(1536)
+# );
+
+# -- Create an index on the title for faster queries
+# CREATE INDEX IF NOT EXISTS idx_products_title ON products(title);
