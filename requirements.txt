@@ -10,3 +10,4 @@ langdetect
 langchain-text-splitters
 pymongo
 dnspython
+numpy
