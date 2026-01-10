@@ -10,3 +10,5 @@ langdetect
 sentence-transformers
 semantic-router
 langchain-text-splitters
+pymongo
+dnspython
