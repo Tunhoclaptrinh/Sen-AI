@@ -1,9 +1,6 @@
-# semantic_router/router.py
 from typing import List, Tuple, Optional, Dict, Any
 import numpy as np
-
 from .route import Route
-
 
 class SemanticRouter:
     """
@@ -23,8 +20,7 @@ class SemanticRouter:
         self.routes = routes
         self.threshold = threshold
         self.margin = margin
-
-        self._route_embs = {}  # route_name -> np.ndarray (n_samples, dim) normalized
+        self._route_embs = {}
 
         for r in self.routes:
             samples = [str(s).strip() for s in (r.samples or []) if str(s).strip()]
@@ -32,6 +28,7 @@ class SemanticRouter:
                 self._route_embs[r.name] = None
                 continue
 
+            # Chuyển đổi samples thành embeddings một lần duy nhất khi khởi tạo
             embs = np.array(self.embedding.encode(samples), dtype=np.float32)
             norms = np.linalg.norm(embs, axis=1, keepdims=True)
             embs = embs / np.clip(norms, 1e-12, None)
@@ -39,106 +36,124 @@ class SemanticRouter:
 
     def guide(self, query: str) -> Tuple[float, str, Optional[Dict[str, Any]]]:
         q_emb = self.embedding.encode([query])
-        if not q_emb:
+        
+        # FIX TẠI ĐÂY: Kiểm tra mảng NumPy một cách an toàn
+        if q_emb is None or len(q_emb) == 0:
             return 0.0, "uncertain", None
 
+        # Đảm bảo q là mảng 1D chuẩn
         q = np.array(q_emb[0], dtype=np.float32)
-        q = q / max(np.linalg.norm(q), 1e-12)
+        q_norm = np.linalg.norm(q)
+        q = q / max(q_norm, 1e-12)
 
         scores = []
         for r in self.routes:
             embs = self._route_embs.get(r.name)
             if embs is None:
                 continue
-            sim = float(np.max(np.dot(embs, q)))  # max similarity
-            scores.append((sim, r))
+            
+            # Tính toán độ tương đồng (Cosine Similarity)
+            # Dùng np.max để lấy sample giống nhất trong route đó
+            sims = np.dot(embs, q)
+            best_sim = float(np.max(sims))
+            scores.append((best_sim, r))
 
         if not scores:
             return 0.0, "uncertain", None
 
+        # Sắp xếp để lấy Route có điểm cao nhất
         scores.sort(key=lambda x: x[0], reverse=True)
         best_score, best_route = scores[0]
-        second_score = scores[1][0] if len(scores) > 1 else None
-
+        
+        # Kiểm tra ngưỡng (Threshold)
         if best_score < self.threshold:
             return float(best_score), "uncertain", None
-
-        if second_score is not None and (best_score - second_score) < self.margin:
-            # vẫn trả route top1 nhưng biết là "gần"
-            pass
 
         return float(best_score), best_route.name, (best_route.filter_dict or None)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+#---- bản cho app_fastapi
+# # semantic_router/router.py
+# from typing import List, Tuple, Optional, Dict, Any
 # import numpy as np
 
-# class SemanticRouter():
-#     def __init__(self, embedding, routes):
-#         """
-#         :param embedding: Một đối tượng embedding có phương thức encode() để chuyển đổi các văn bản thành embeddings.
-#         :param routes: Danh sách các đối tượng route với các thuộc tính như name và samples.
-#         """
-#         self.routes = routes
+# from .route import Route
+
+
+# class SemanticRouter:
+#     """
+#     Router dựa trên cosine similarity giữa query embedding và sample embeddings của từng route.
+#     - Precompute embeddings cho samples để chạy nhanh.
+#     - Dùng max similarity để bắt keyword mạnh.
+#     """
+
+#     def __init__(
+#         self,
+#         embedding,
+#         routes: List[Route],
+#         threshold: float = 0.6,
+#         margin: float = 0.08
+#     ):
 #         self.embedding = embedding
-#         self.routesEmbedding = {}
+#         self.routes = routes
+#         self.threshold = threshold
+#         self.margin = margin
 
-#         # Tính toán embedding cho mỗi route
-#         for route in self.routes:
-#             # Ensure that `route.samples` is a list of strings
-#             if not isinstance(route.samples, list):
-#                 raise ValueError(f"Route {route.name} samples must be a list of strings.")
-            
-#             # Convert all items in `route.samples` to strings
-#             route.samples = [str(sample) for sample in route.samples]
+#         self._route_embs = {}  # route_name -> np.ndarray (n_samples, dim) normalized
 
-#             # Encode the samples into embeddings
-#             self.routesEmbedding[route.name] = self.embedding.encode(route.samples)
+#         for r in self.routes:
+#             samples = [str(s).strip() for s in (r.samples or []) if str(s).strip()]
+#             if not samples:
+#                 self._route_embs[r.name] = None
+#                 continue
 
-#     def get_routes(self):
-#         """
-#         Trả về danh sách các routes.
-#         """
-#         return self.routes
+#             embs = np.array(self.embedding.encode(samples), dtype=np.float32)
+#             norms = np.linalg.norm(embs, axis=1, keepdims=True)
+#             embs = embs / np.clip(norms, 1e-12, None)
+#             self._route_embs[r.name] = embs
 
-#     def guide(self, query):
-#         """
-#         Nhận truy vấn và trả về route có điểm tương đồng cao nhất với truy vấn.
-        
-#         :param query: Câu truy vấn để tìm kiếm trên các routes.
-#         :return: Route có điểm tương đồng cao nhất với truy vấn.
-#         """
-#         queryEmbedding = self.embedding.encode([query])  # Biến truy vấn thành embedding
-#         queryEmbedding = queryEmbedding / np.linalg.norm(queryEmbedding)  # Chuẩn hóa truy vấn
+#     def guide(self, query: str) -> Tuple[float, str, Optional[Dict[str, Any]]]:
+#         q_emb = self.embedding.encode([query])
+#         if not q_emb:
+#             return 0.0, "uncertain", None
+
+#         q = np.array(q_emb[0], dtype=np.float32)
+#         q = q / max(np.linalg.norm(q), 1e-12)
 
 #         scores = []
+#         for r in self.routes:
+#             embs = self._route_embs.get(r.name)
+#             if embs is None:
+#                 continue
+#             sim = float(np.max(np.dot(embs, q)))  # max similarity
+#             scores.append((sim, r))
 
-#         # Tính toán cosine similarity giữa embedding của truy vấn và embedding của các route
-#         for route in self.routes:
-#             routesEmbedding = self.routesEmbedding[route.name]  # Lấy embedding của route
-#             routesEmbedding = routesEmbedding / np.linalg.norm(routesEmbedding, axis=1, keepdims=True)  # Chuẩn hóa các sample embeddings
+#         if not scores:
+#             return 0.0, "uncertain", None
 
-#             # Tính điểm tương đồng giữa các embedding của route và truy vấn
-#             score = np.mean(np.dot(routesEmbedding, queryEmbedding.T).flatten())
-#             scores.append((score, route.name))
+#         scores.sort(key=lambda x: x[0], reverse=True)
+#         best_score, best_route = scores[0]
+#         second_score = scores[1][0] if len(scores) > 1 else None
 
-#         # Sắp xếp các scores theo thứ tự giảm dần và trả về route có điểm tương đồng cao nhất
-#         scores.sort(reverse=True, key=lambda x: x[0])
+#         if best_score < self.threshold:
+#             return float(best_score), "uncertain", None
 
-#         # Nếu độ tương đồng thấp, không trả lời câu hỏi
-#         if scores[0][0] < 0.35:  # Ngưỡng tương đồng (có thể điều chỉnh ngưỡng 0.5)
-#             return 0, "uncertain"  # Trả về "uncertain" khi không có độ tương đồng cao
+#         if second_score is not None and (best_score - second_score) < self.margin:
+#             # vẫn trả route top1 nhưng biết là "gần"
+#             pass
 
-#         # Trả về route có điểm tương đồng cao nhất nếu câu hỏi liên quan đến múa rối nước
-#         return scores[0]  # Trả về tuple (score, best_route)
+#         return float(best_score), best_route.name, (best_route.filter_dict or None)
+
+
+
+
+
+
+
+
+
+
+
+
+

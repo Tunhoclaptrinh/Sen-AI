@@ -1,50 +1,33 @@
-# reflection.py
 from typing import Dict, List
-from openai import OpenAI
-
+from openai import AsyncOpenAI
 
 class Reflection:
-    """
-    Rewrite câu hỏi thành câu độc lập để retrieval chuẩn hơn.
-    """
-
-    def __init__(self, llm_client: OpenAI):
+    def __init__(self, llm_client: AsyncOpenAI):
         self.client = llm_client
 
-    def rewrite(self, messages: List[Dict], current_query: str) -> str:
-        chat_history = [m for m in messages if m["role"] in ("user", "assistant")][-10:]
-
+    async def rewrite(self, messages: List[Dict], current_query: str) -> str:
+        chat_history = [m for m in messages if m["role"] in ("user", "assistant")][-5:]
         history_text = ""
         for m in chat_history:
             role = "Khách" if m["role"] == "user" else "Bot"
             history_text += f"{role}: {m['content']}\n"
         history_text += f"Khách: {current_query}\n"
 
-        prompt = [
-            {
-                "role": "system",
-                "content": (
-                    "Bạn là chuyên gia về văn hóa - di sản Việt Nam. "
-                    "Hãy viết lại câu hỏi cuối thành một câu hỏi ĐỘC LẬP để tra cứu dữ liệu. "
-                    "YÊU CẦU: giữ nguyên ngôn ngữ gốc, không trả lời, chỉ trả về câu hỏi đã viết lại."
-                )
-            },
-            {"role": "user", "content": f"Lịch sử chat:\n{history_text}\n\nCâu hỏi độc lập:"}
-        ]
+        prompt = [{
+            "role": "system",
+            "content": "Bạn là chuyên gia về văn hóa Việt Nam. Hãy viết lại câu hỏi thành một câu ĐỘC LẬP để tra cứu. Chỉ trả về câu hỏi."
+        }, {"role": "user", "content": f"Lịch sử chat:\n{history_text}\n\nCâu hỏi độc lập:"}]
 
         try:
-            resp = self.client.chat.completions.create(
+            resp = await self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=prompt,
                 temperature=0
             )
             rewritten = resp.choices[0].message.content.strip()
-            rewritten = rewritten.replace('"', "").replace("“", "").replace("”", "")
-            return rewritten or current_query
+            return rewritten.replace('"', "") or current_query
         except Exception:
             return current_query
-
-
 
 # from typing import List, Dict
 # import openai
