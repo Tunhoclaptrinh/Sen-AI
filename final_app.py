@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DB_NAME = "vector_db"
-COLLECTION_NAME = "culture"
+COLLECTION_NAME = "culture_collection"
 REDIS_URL = os.getenv("REDIS_URL")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
