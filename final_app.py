@@ -22,7 +22,7 @@ from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharac
 # Module tùy chỉnh của Hiếu
 from vector_db import VectorDatabase
 from reflection import Reflection
-from my_semantic_logic.route import Route
+from semantic_router.route import Route
 from semantic_router.layer import RouteLayer
 from semantic_router.encoders import OpenAIEncoder # Dùng encoder của OpenAI cho nhẹ
 
