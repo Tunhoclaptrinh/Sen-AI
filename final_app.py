@@ -92,7 +92,7 @@ async def auto_ingest_data(v_db: VectorDatabase, client: AsyncOpenAI):
                 logger.info(f"✅ Đã nạp xong {len(docs_to_insert)} đoạn cho {culture_type}")
 
 # ====== 3. ROUTER ======
-from semantic_router.samples import roiNuocSample, hoangThanhSample, chitchatSample
+from my_semantic_logic.samples import roiNuocSample, hoangThanhSample, chitchatSample
 routes = [
     Route(name="roi_nuoc", samples=roiNuocSample),
     Route(name="hoang_thanh", samples=hoangThanhSample),
