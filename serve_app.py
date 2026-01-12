@@ -21,9 +21,9 @@ from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharac
 # Module tùy chỉnh của Hiếu
 from vector_db import VectorDatabase
 from reflection import Reflection
-from semantic_router.route import Route
-from semantic_router.router import SemanticRouter
-import semantic_router.samples as samples
+from my_semantic_logic.route import Route
+from my_semantic_logic.router import SemanticRouter
+import my_semantic_logic.samples as samples
 
 # ====== 1. CẤU HÌNH GLOBAL ======
 load_dotenv()
