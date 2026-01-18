@@ -5,8 +5,13 @@ import json
 import logging
 from typing import List, Dict, Optional
 from contextlib import asynccontextmanager
+import time
+import sys
+import socket
+import asyncio
+from urllib.parse import parse_qs
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from openai import AsyncOpenAI 
@@ -118,9 +123,21 @@ class ChatResponse(BaseModel):
     audio_base64: Optional[str] = None
     context_used: Optional[str] = None
 
-# ====== 5. LIFESPAN ======
+# ====== 5. LIFESPAN (Include Startup Logic Here) ======
+
+def get_network_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        return "localhost"
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # --- STARTUP LOGIC ---
     if not REDIS_URL:
         raise ValueError("❌ Lỗi: REDIS_URL chưa được khai báo trong .env")
         
@@ -128,8 +145,71 @@ async def lifespan(app: FastAPI):
     app.state.openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     app.state.reflector = Reflection(llm_client=app.state.openai_client)
     
-    # auto_ingest_data(vector_db)
+    # auto_ingest_data(vector_db) # User has this commented out in their snippet
+    
+    # Print Banner
+    port = 8000
+    network_ip = get_network_ip()
+    env = os.getenv("ENV", "development")
+    
+    print(f"\n✅ Server restart triggered at {time.strftime('%Y-%m-%dT%H:%M:%S.000Z')}", flush=True)
+    
+    import unicodedata
+
+    def get_visual_width(s):
+        width = 0
+        for char in s:
+            # Explicitly handle Emoji ranges and specific symbols that render wide
+            code = ord(char)
+            if (0x1F000 <= code <= 0x1F9FF) or (code == 0x2764) or (code == 0x2699):
+                width += 2
+                continue
+
+            # Standard East Asian Width
+            if unicodedata.east_asian_width(char) in ('W', 'F'):
+                width += 2
+            else:
+                width += 1
+        return width
+
+    def print_line(icon, label, value, width=62):
+        # Format: "   ICON  Label....... Value"
+        label_part = f"{label:<13}"
+        text = f"   {icon}  {label_part} {value}"
+        
+        # Robustly calculate exact visual display width
+        vis_len = get_visual_width(text)
+        
+        padding = width - vis_len
+        if padding < 0: padding = 0
+        
+        print(f"║{text}{' ' * padding}║", flush=True)
+
+    border_width = 62
+    border = "═" * border_width
+    
+    print(f"╔{border}╗", flush=True)
+    
+    # Center Title
+    title_text = "🏛️   Sen Server Started!"
+    title_vis_len = get_visual_width(title_text)
+    total_pad = border_width - title_vis_len
+    left_pad = total_pad // 2
+    right_pad = total_pad - left_pad
+    print(f"║{' ' * left_pad}{title_text}{' ' * right_pad}║", flush=True)
+    
+    print(f"╠{border}╣", flush=True)
+    print_line("📍", "Local:", f"http://localhost:{port}", border_width)
+    print_line("📡", "Network:", f"http://{network_ip}:{port}", border_width)
+    print_line("🌍", "Env:", f"{env}", border_width)
+    print(f"╠{border}╣", flush=True)
+    print_line("📊", "API Docs:", f"http://localhost:{port}/docs", border_width)
+    print_line("❤️", "Health:", f"http://localhost:{port}/", border_width)
+    print(f"╚{border}╝", flush=True)
+
     yield
+    
+    # --- SHUTDOWN LOGIC ---
     await app.state.redis.close()
 
 app = FastAPI(title="Heritage NPC API", lifespan=lifespan)
@@ -150,6 +230,51 @@ async def generate_audio_async(text: str) -> str:
         return base64.b64encode(audio_data).decode()
     except: return ""
 
+# ====== MIDDLEWARE LOGGING (PURE ASGI - ROBUST) ======
+
+def console_log(*args):
+    print(*args, flush=True)
+
+class ASGILoggerMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] not in ("http", "https"):
+            return await self.app(scope, receive, send)
+
+        # 1. Setup Request Logging
+        start_time = time.time()
+        method = scope["method"]
+        path = scope["path"]
+        query_string = scope.get("query_string", b"").decode()
+        
+        # 2. Log Request (NO BODY, as requested)
+        console_log(f"\n📥 REQUEST → {method} {path}")
+        if query_string:
+            try:
+                parsed = parse_qs(query_string)
+                clean_params = {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
+                console_log("   Query:", clean_params)
+            except:
+                console_log("   Query:", query_string)
+        
+        # 3. Wrap Send to capture Response
+        async def wrapped_send(message):
+            if message["type"] == "http.response.start":
+                status_code = message["status"]
+                process_time = (time.time() - start_time) * 1000
+                console_log(f"📤 RESPONSE ← {method} {path}")
+                console_log(f"   Status: {status_code}")
+                console_log(f"   Time: {process_time:.2f}ms")
+            await send(message)
+
+        await self.app(scope, receive, wrapped_send)
+
+# Replace the old middleware with the new pure ASGI one
+app.add_middleware(ASGILoggerMiddleware)
+
+
 # ====== 7. ENDPOINT CHÍNH ======
 @app.post("/process_query", response_model=ChatResponse)
 async def process_query(request: ChatRequest):
@@ -168,7 +293,9 @@ async def process_query(request: ChatRequest):
         # 2. Xử lý Chitchat sớm
         if score > 0.7 and route_name in ("uncertain", "chitchat"):
             ans = "Chào bạn! Mình là Minh. Bạn cần mình giúp gì về văn hóa Việt Nam không?"
-            return ChatResponse(answer=ans, rewritten_query=user_input, route=route_name, score=score, audio_base64=await generate_audio_async(ans))
+            resp = ChatResponse(answer=ans, rewritten_query=user_input, route=route_name, score=score, audio_base64=await generate_audio_async(ans))
+            console_log("   Response:", resp.model_dump()) # Added manual log
+            return resp
 
         # 3. Rewrite câu hỏi (GPT fix không dấu, lỗi chính tả ở đây)
         rewritten = await reflector.rewrite(history, user_input)
@@ -178,10 +305,12 @@ async def process_query(request: ChatRequest):
         cached_data = await redis_conn.get(cache_key)
         if cached_data:
             logger.info("🚀 Cache Hit!")
-            return ChatResponse(**json.loads(cached_data))
+            data = json.loads(cached_data)
+            resp = ChatResponse(**data)
+            console_log("   Response:", data) # Added manual log
+            return resp
 
         # 5. [NÂNG CẤP] HYBRID RAG PIPELINE (Vector + Keyword)
-        
         
         # Bước A: Tìm kiếm Vector (Lấy 10 ứng viên)
         q_vec = local_embedder.encode([rewritten])[0].tolist()
@@ -189,7 +318,9 @@ async def process_query(request: ChatRequest):
         
         if not candidates:
             ans = "Tiếc quá, hiện tại mình chưa có thông tin về phần này."
-            return ChatResponse(answer=ans, rewritten_query=rewritten, route=route_name, score=score, audio_base64=await generate_audio_async(ans))
+            resp = ChatResponse(answer=ans, rewritten_query=rewritten, route=route_name, score=score, audio_base64=await generate_audio_async(ans))
+            console_log("   Response:", resp.model_dump()) # Added manual log
+            return resp
 
         # Bước B: Reranking bằng Keyword Score
         for res in candidates:
@@ -217,6 +348,7 @@ async def process_query(request: ChatRequest):
             temperature=0.3
         )
         answer = final_res.choices[0].message.content
+        
         audio_b64 = await generate_audio_async(answer)
 
         response_data = ChatResponse(
@@ -226,13 +358,15 @@ async def process_query(request: ChatRequest):
 
         # 7. Lưu cache (Hết hạn sau 1 tiếng)
         await redis_conn.setex(cache_key, 3600, response_data.model_dump_json())
+        
+        console_log("   Response:", response_data.model_dump()) # Added manual log
         return response_data
 
     except Exception as e:
         logger.error(f"❌ Server Error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-# 1. Thêm cái này TRƯỚC khối __main__
+# 8. Endpoint Root
 @app.get("/")
 async def root():
     return {
