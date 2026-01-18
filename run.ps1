@@ -22,16 +22,31 @@ function Show-Menu {
 
 function Load-Env {
     if (Test-Path ".env") {
-        Get-Content ".env" |
-            Where-Object { $_ -notmatch '^\s*#' -and $_ -match '=' } |
-            ForEach-Object {
-                $parts = $_ -split '=', 2
-                [System.Environment]::SetEnvironmentVariable(
-                    $parts[0].Trim(),
-                    $parts[1].Trim(),
-                    "Process"
-                )
+        Write-Host "[Info] Loading environment variables from .env..."
+        Get-Content ".env" | ForEach-Object {
+            $line = $_.Trim()
+            # Skip comments and empty lines
+            if ($line -and $line -notmatch '^\s*#' -and $line -match '=') {
+                $parts = $line -split '=', 2
+                $key = $parts[0].Trim()
+                $value = $parts[1].Trim()
+                
+                # Remove inline comments (e.g. VAR=val # comment)
+                # Be careful not to break values containing # inside quotes, but specific regex is hard.
+                # Simple approach: split by space-# if possible, or just assume # starts comment.
+                if ($value.Contains(" #")) {
+                    $value = $value.Split("#")[0].Trim()
+                }
+
+                # Remove wrapping quotes (double or single)
+                if ($value -match '^"(.*)"$') { $value = $matches[1] }
+                elseif ($value -match "^'(.*)'$") { $value = $matches[1] }
+                
+                if ($key) {
+                    [System.Environment]::SetEnvironmentVariable($key, $value, "Process")
+                }
             }
+        }
     }
 }
 
@@ -46,10 +61,17 @@ function Start-Docker($profile) {
         "build" {
             Write-Host "[Docker] Building development images..."
             docker-compose -f $DOCKER_DEV build
-            Write-Host ""
-            Write-Host "[OK] Images built successfully"
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host ""
+                Write-Host "[OK] Images built successfully"
+            } else {
+                 Write-Host "[Error] Docker build failed" -ForegroundColor Red
+            }
         }
         "dev" {
+            # 'up' should automatically build if image is missing, 
+            # but we can force build with --build if needed. 
+            # Matching run.sh behavior: just 'up'
             docker-compose -f $DOCKER_DEV up
         }
         "logs" {
