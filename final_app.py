@@ -185,7 +185,7 @@ async def process_query(request: ChatRequest):
 
         # 2. Xử lý Chitchat sớm
         if route_name == "chitchat":
-            ans = "Chào bạn! Mình là Minh. Bạn cần mình giúp gì về văn hóa Việt Nam không?"
+            ans = "Chào bạn! Mình là SEN. Bạn cần mình giúp gì về văn hóa Việt Nam không?"
             return ChatResponse(answer=ans, rewritten_query=user_input, route=route_name, score=score, audio_base64=await generate_audio_async(ans))
 
         # 3. Rewrite câu hỏi
@@ -218,7 +218,7 @@ async def process_query(request: ChatRequest):
         final_res = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Bạn là NPC tên Minh. Trả lời thân thiện dựa trên CONTEXT. Nếu không có thông tin, hãy xin lỗi."},
+                {"role": "system", "content": "Bạn là NPC tên SEN. Trả lời thân thiện dựa trên CONTEXT. Nếu không có thông tin, hãy xin lỗi."},
                 {"role": "user", "content": f"CONTEXT:\n{context}\n\nQ: {rewritten}"}
             ],
             temperature=0.3
@@ -240,7 +240,7 @@ async def process_query(request: ChatRequest):
 
 @app.get("/")
 async def root():
-    return {"message": "NPC Minh API is online!", "mode": "OpenAI-Lightweight"}
+    return {"message": "NPC SEN API is online!", "mode": "OpenAI-Lightweight"}
 
 if __name__ == "__main__":
     import uvicorn
