@@ -1,0 +1,34 @@
+# ============================================
+# RAG Practice - Docker Compose (Development)
+# ============================================
+
+services:
+  # ==========================================
+  # RAG Service
+  # ==========================================
+  rag-practice-dev:
+    build:
+      context: ../..
+      dockerfile: Docker/Dev/Dockerfile
+    image: dev-rag-practice
+    container_name: rag-practice-dev
+    restart: unless-stopped
+    # Load environment variables from specific file
+    env_file:
+      - ../../.env
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the root directory to /app for hot-reloading
+      - ../..:/app
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    command: uvicorn serve_app:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - sen-network-dev
+
+networks:
+  sen-network-dev:
+    name: sen-network-dev
+    driver: bridge
