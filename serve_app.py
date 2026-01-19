@@ -212,7 +212,7 @@ async def lifespan(app: FastAPI):
     # --- SHUTDOWN LOGIC ---
     await app.state.redis.close()
 
-app = FastAPI(title="Heritage NPC API", lifespan=lifespan)
+app = FastAPI(title="Heritage AI API", lifespan=lifespan)
 vector_db = VectorDatabase(db_name=DB_NAME)
 
 # ====== 6. UTILS ======
@@ -292,7 +292,7 @@ async def process_query(request: ChatRequest):
 
         # 2. Xử lý Chitchat sớm
         if score > 0.7 and route_name in ("uncertain", "chitchat"):
-            ans = "Chào bạn! Mình là Minh. Bạn cần mình giúp gì về văn hóa Việt Nam không?"
+            ans = "Chào bạn! Mình là Sen. Bạn cần mình giúp gì về văn hóa Việt Nam không?"
             resp = ChatResponse(answer=ans, rewritten_query=user_input, route=route_name, score=score, audio_base64=await generate_audio_async(ans))
             console_log("   Response:", resp.model_dump()) # Added manual log
             return resp
@@ -342,7 +342,7 @@ async def process_query(request: ChatRequest):
         final_res = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Bạn là NPC tên Minh. Trả lời thân thiện dựa trên CONTEXT được cung cấp. Nếu không có trong context, hãy xin lỗi khéo léo."},
+                {"role": "system", "content": "Bạn là AI tên Sen. Trả lời thân thiện dựa trên CONTEXT được cung cấp. Nếu không có trong context, hãy xin lỗi khéo léo."},
                 {"role": "user", "content": f"CONTEXT:\n{context}\n\nQ: {rewritten}"}
             ],
             temperature=0.3
@@ -370,7 +370,7 @@ async def process_query(request: ChatRequest):
 @app.get("/")
 async def root():
     return {
-        "message": "NPC Minh API is running!",
+        "message": "AI Sen API is running!",
         "status": "online",
         "author": "Hieu"
     }

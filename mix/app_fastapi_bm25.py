@@ -63,7 +63,7 @@ router = SemanticRouter(embedding=embedding, routes=routes, threshold=0.5)
 
 # ====== PROMPT & LOGIC ======
 SYSTEM_PROMPT = (
-    "Bạn là một hướng dẫn viên ảo tên là 'Minh', chuyên gia về Di sản Văn hóa Việt Nam.\n"
+    "Bạn là một hướng dẫn viên ảo tên là 'Sen', chuyên gia về Di sản Văn hóa Việt Nam.\n"
     "--- NGÔN NGỮ (LANGUAGE RULES) ---\n"
     "- Nếu khách hỏi bằng tiếng Việt, hãy trả lời bằng tiếng Việt.\n"
     "- If the user asks in English, you MUST respond in English.\n"
@@ -117,7 +117,7 @@ async def process_query(request: ChatRequest):
 
     # TRƯỜNG HỢP 1: Chắc chắn là Chitchat hoặc câu chào ngay từ đầu
     if score > 0.6 and route_name in ("uncertain", "chitchat"):
-        ans = "Chào bạn! Mình là Minh đây. Bạn cần mình hỗ trợ gì về di sản không?"
+        ans = "Chào bạn! Mình là Sen đây. Bạn cần mình hỗ trợ gì về di sản không?"
         # QUAN TRỌNG: Phải return ngay để không chạy xuống phần RAG phía dưới
         return ChatResponse(
             answer=ans, 
@@ -147,7 +147,7 @@ async def process_query(request: ChatRequest):
             
             # Nếu sau khi Rewrite vẫn không phải di sản hoặc điểm vẫn thấp (bbb, ccc...)
             if route_name in ("uncertain", "chitchat") or score < 0.4:
-                ans = "Chào bạn! Câu này Minh chưa rõ lắm, nhưng bạn có muốn nghe về Hoàng Thành hay Múa rối nước không?"
+                ans = "Chào bạn! Câu này Sen chưa rõ lắm, nhưng bạn có muốn nghe về Hoàng Thành hay Múa rối nước không?"
                 return ChatResponse(
                     answer=ans, rewritten_query=rewritten, 
                     route=route_name, score=score, 
@@ -156,7 +156,7 @@ async def process_query(request: ChatRequest):
         else:
             # Không có từ mơ hồ mà điểm vẫn thấp -> Đích thị là nói linh tinh (bbb, ccc, alooo)
             # Trả về câu chào luôn, không cho xuống RAG
-            ans = "Minh nghe đây! Bạn muốn hỏi gì về di sản văn hóa Việt Nam nào?"
+            ans = "Sen nghe đây! Bạn muốn hỏi gì về di sản văn hóa Việt Nam nào?"
             return ChatResponse(
                 answer=ans, rewritten_query=user_input, 
                 route=route_name, score=score, 
@@ -191,7 +191,7 @@ async def process_query(request: ChatRequest):
         
     #     # Sau khi Rewrite vẫn là chitchat hoặc điểm quá thấp (bbb, ccc...)
     #     if route_name in ("uncertain", "chitchat") or score < 0.4:
-    #         ans = "Chào bạn! Tôi là Minh. Bạn muốn tìm hiểu về Múa rối nước hay Hoàng thành Thăng Long nhỉ?"
+    #         ans = "Chào bạn! Tôi là Sen. Bạn muốn tìm hiểu về Múa rối nước hay Hoàng thành Thăng Long nhỉ?"
     #         return ChatResponse(
     #             answer=ans, 
     #             rewritten_query=rewritten, 
