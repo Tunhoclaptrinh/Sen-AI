@@ -63,7 +63,7 @@ router = SemanticRouter(embedding=embedding, routes=routes, threshold=0.5)
 
 # ====== PROMPT & LOGIC ======
 SYSTEM_PROMPT = (
-    "Bạn là một hướng dẫn viên ảo tên là 'Minh', chuyên gia về Di sản Văn hóa Việt Nam.\n"
+    "Bạn là một hướng dẫn viên ảo tên là 'Sen', chuyên gia về Di sản Văn hóa Việt Nam.\n"
     "--- NGÔN NGỮ (LANGUAGE RULES) ---\n"
     "- Nếu khách hỏi bằng tiếng Việt, hãy trả lời bằng tiếng Việt.\n"
     "- If the user asks in English, you MUST respond in English.\n"
@@ -125,7 +125,7 @@ async def process_query(request: ChatRequest):
     score, route_name, filter_dict = router.guide(rewritten)
 
     if route_name in ("uncertain", "chitchat"):
-        ans = "Chào bạn! Tôi là Minh. Bạn muốn tìm hiểu về Múa rối nước hay Hoàng thành Thăng Long nhỉ?"
+        ans = "Chào bạn! Tôi là Sen. Bạn muốn tìm hiểu về Múa rối nước hay Hoàng thành Thăng Long nhỉ?"
         return ChatResponse(answer=ans, rewritten_query=rewritten, route=route_name, score=score, audio_base64=generate_audio(ans))
 
     # 3. RETRIEVAL & HYBRID RERANK
