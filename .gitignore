@@ -1,0 +1,49 @@
+# --- Security & Secrets ---
+.env
+.env.*
+*.key
+*.pem
+secrets.json
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.whl
+dist/
+build/
+*.egg-info/
+
+# --- Virtual Environments ---
+.venv/
+env/
+venv/
+ENV/
+
+# --- IDE & Editors ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# --- Application Data & Logs ---
+*.log
+logs/
+chat_logs.json
+*.db
+*.sqlite3
+
+# --- Local Databases ---
+vector_db/
+# Nếu dùng Chroma/FAISS local thì ignore thêm, ở đây dùng MongoDB Atlas nên folder vector_db có thể là rác
+
+# --- Media (Generated) ---
+*.mp3
+*.webm
+*.wav
+
+# --- Temporary/Backup ---
+Agentic-RAG - Copy/
+*.bak
+tmp/
