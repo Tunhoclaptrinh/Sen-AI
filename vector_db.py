@@ -26,8 +26,24 @@ class VectorDatabase:
         if not uri:
             raise RuntimeError("Thiếu MONGODB_URI trong .env")
 
-        self.client = MongoClient(uri)
-        self.db = self.client[db_name]
+        try:
+            # 🔧 FIX: Dùng connect=False để bypass lỗi DNS check ngay lúc khởi động
+            # 🔧 FIX: Dùng readPreference='secondaryPreferred' để cho phép đọc từ node phụ nếu node chính bị DNS lỗi (failover)
+            self.client = MongoClient(uri, serverSelectionTimeoutMS=5000, connect=False, readPreference='secondaryPreferred')
+            self.db = self.client[db_name]
+            
+            # Thử ping nhẹ (không bắt buộc thành công ngay)
+            try:
+                # self.client.admin.command('ping') 
+                print("✅ MongoDB Client initialized (Lazy connect).")
+            except:
+                print("⚠️ MongoDB chưa kết nối được ngay (sẽ retry khi query).")
+                
+        except Exception as e:
+            print(f"⚠️ MONGODB CRITICAL ERROR: {e}")
+            print("➡️ Forced Mock Mode.")
+            self.client = None
+            self.db = None
 
     @staticmethod
     def _ensure_1d_float_list(vec: Any) -> List[float]:
@@ -40,6 +56,9 @@ class VectorDatabase:
 
     def insert_many(self, collection_name: str, docs: List[Dict[str, Any]]) -> int:
         if not docs:
+            return 0
+            
+        if self.db is None:
             return 0
 
         col = self.db[collection_name]
@@ -75,6 +94,7 @@ class VectorDatabase:
         return len(res.inserted_ids)
 
     def count_documents(self, collection_name: str, filter_query: Optional[Dict[str, Any]] = None) -> int:
+        if self.db is None: return 0
         return self.db[collection_name].count_documents(filter_query or {})
 
     def delete_many(self, collection_name: str, filter_query: Dict[str, Any]) -> int:
@@ -83,6 +103,7 @@ class VectorDatabase:
         """
         if not filter_query:
             return 0
+        if self.db is None: return 0
         res = self.db[collection_name].delete_many(filter_query)
         return res.deleted_count
 
@@ -101,6 +122,7 @@ class VectorDatabase:
         query_vector: list[float] 1 chiều (1536)
         filter_dict: ví dụ {"culture_type": "mua_roi_nuoc"}
         """
+        if self.db is None: return []
         col = self.db[collection_name]
         q = self._ensure_1d_float_list(query_vector)
 
@@ -144,6 +166,7 @@ class VectorDatabase:
         """
         Fallback search using Regex Scan (Slow but guarantees match for keywords).
         """
+        if self.db is None: return []
         col = self.db[collection_name]
         cursor = col.find(
             {"content": {"$regex": regex_pattern, "$options": "i"}}, # Case-insensitive
@@ -186,6 +209,7 @@ class VectorDatabase:
         
         # Try to create if supported by driver/cluster (M10+)
         try:
+            if self.db is None: return
             self.db[collection_name].create_search_index(
                 model=index_def,
                 name="vector_index"

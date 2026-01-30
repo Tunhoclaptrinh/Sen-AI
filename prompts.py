@@ -2,6 +2,9 @@ import json
 import os
 import logging
 from data_manager import get_heritage_config
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +77,10 @@ DANH SÁCH KEY: {site_keys} hoặc null.
 
 ⭐ SỬ DỤNG SITE HINT:
 {hint_str}
+
+⚠️ QUY TẮC ĐẶC BIỆT:
+- Nếu người dùng hỏi gợi ý địa điểm, hỏi chung chung (VD: "đi đâu chơi", "giới thiệu chỗ khác", "khám phá gì", "còn chỗ nào không") -> Intent: "chitchat" (để AI tự gợi ý) hoặc "heritage" (site: null).
+- KHÔNG trả về "out_of_scope" nếu câu hỏi liên quan đến du lịch/tham quan/lịch sử, kể cả khi không khớp site key nào.
 """
     
     return base_prompt + "\n" + dynamic_part
@@ -96,7 +103,24 @@ Nếu nội dung độc hại, sai lệch nghiêm trọng, hoặc bịa đặt (
 
 def get_contextualize_prompt():
     global _PROMPTS
-    return _PROMPTS.get("contextualize_prompt", "Viết lại câu hỏi...")
+    return _PROMPTS.get("contextualize_prompt", """
+Bạn là chuyên gia ngôn ngữ học, nhiệm vụ là VIẾT LẠI (Rewrite) câu nói của người dùng thành một câu đầy đủ ngữ nghĩa, dựa trên Lịch sử hội thoại.
+
+QUY TẮC QUAN TRỌNG:
+1. Phân tích câu cuối cùng của AI trong lịch sử:
+   - Nếu AI đang hỏi/mời mọc (Ví dụ: "Bạn có muốn gợi ý địa điểm khác không?", "Tôi kể tiếp nhé?").
+   - Và người dùng trả lời ngắn (Ví dụ: "Có", "Không", "Ok", "Tôi không muốn", "Sao cũng được").
+   -> HÃY VIẾT LẠI thành hành động cụ thể mà người dùng muốn.
+   
+2. Ví dụ minh họa:
+   - AI: "...Cần mình gợi ý chỗ ăn ngon không?" -> User: "Có" => Rewrite: "Hãy gợi ý cho tôi quán ăn ngon."
+   - AI: "...Muốn nghe lịch sử tiếp không?" -> User: "Thôi" => Rewrite: "Tôi không muốn nghe lịch sử nữa, hãy chuyển chủ đề."
+   - AI: "...Hoàng Thành đóng cửa rồi." -> User: "Thế đi đâu giờ?" => Rewrite: "Gợi ý địa điểm tham quan khác thay thế cho Hoàng Thành Thăng Long."
+
+3. Nếu câu nói đã đủ ý hoặc là chủ đề mới -> Giữ nguyên.
+
+OUTPUT: Chỉ trả về câu đã viết lại, không giải thích thêm.
+""")
 
 # Backward compatibility & Export
 SEN_CHARACTER_PROMPT = get_sen_persona()

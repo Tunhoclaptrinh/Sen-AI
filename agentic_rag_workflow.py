@@ -1,6 +1,7 @@
 import json
 import logging
 import asyncio
+from datetime import datetime
 from knowledge_base import KnowledgeBase
 from heritage_tool import HeritageTools
 from prompts import get_planner_prompt, SEN_CHARACTER_PROMPT
@@ -57,10 +58,17 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         hist_str = ""
         for i, entry in enumerate(history[-6:]):
             if isinstance(entry, dict):
-                q = entry.get('user_input', '')
-                a = entry.get('generated_answer', '')[:100]
-                if q: hist_str += f"User: {q}\n"
-                if a: hist_str += f"AI: {a}\n"
+                # Support standard OpenAI format {role, content} from Node.js
+                if 'role' in entry and 'content' in entry:
+                    role = entry.get('role', '').capitalize()
+                    content = entry.get('content', '')
+                    hist_str += f"{role}: {content}\n"
+                else:
+                    # Support internal format {user_input, generated_answer}
+                    q = entry.get('user_input', '')
+                    a = entry.get('generated_answer', '')[:100]
+                    if q: hist_str += f"User: {q}\n"
+                    if a: hist_str += f"AI: {a}\n"
             elif isinstance(entry, str):
                 role = "User" if i % 2 == 0 else "AI"
                 hist_str += f"{role}: {entry[:200]}\n"
@@ -135,9 +143,17 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
 
         # --- CASE B: CHITCHAT ---
         if intent == "chitchat":
+            # Inject Current Time
+            current_time = datetime.now().strftime("%H:%M ngày %d/%m/%Y")
+            system_msg = f"""{SEN_CHARACTER_PROMPT}
+
+[THÔNG TIN THỜI GIAN THỰC]: Hiện tại là {current_time}.
+[QUY TẮC FORMAT]: Nếu có Link/URL, BẮT BUỘC định dạng Markdown: [Tên Link](URL). Không để URL trần.
+[QUY TẮC GỢI Ý]: Khi người dùng nhờ giới thiệu/gợi ý địa điểm đi chơi, HÃY CHỈ tập trung vào các DI SẢN VĂN HÓA, LỊCH SỬ, hoặc DANH LAM THẮNG CẢNH VIỆT NAM (Ví dụ: Hoàng Thành, Văn Miếu, Chùa Một Cột, Nhà Tù Hỏa Lò...). Tránh gợi ý các khu vui chơi giải trí thuần túy trừ khi được hỏi."""
+            
             res = await state.openai.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[{"role": "system", "content": SEN_CHARACTER_PROMPT}, {"role": "user", "content": u_input}],
+                messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": u_input}],
                 stream=True
             )
             full_ans = ""
@@ -219,9 +235,12 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
             # [STRICT MODE] Kiểm tra nếu không có dữ liệu RAG
             # fetch_and_rerank có thể trả về string rỗng hoặc None
             if not rag_content or not rag_content.strip():
-                fallback_msg = "Dạ, hiện tại trong thư viện của Sen chưa có tài liệu nào về địa điểm này ạ (Hoặc dữ liệu chưa được nạp). Bác thông cảm hỏi địa điểm khác nhé!"
+                # ✨ STRICT MODE UPDATE: User yêu cầu CHỈ lấy từ DB.
+                # Nếu không có, log lỗi và báo không tìm thấy.
+                logger.error("❌ MONGODB RETRIEVAL FAILED: Không tìm thấy document nào khớp câu hỏi.")
+                
+                fallback_msg = "Xin lỗi, Sen không tìm thấy thông tin này trong Cơ sở dữ liệu của mình (MongoDB trả về rỗng). Vui lòng kiểm tra lại kết nối hoặc dữ liệu."
                 yield {"status": "streaming", "content": fallback_msg}
-                # Kết thúc flow ngay, không cho LLM chém gió
                 yield {"status": "finished", "result": {"answer": fallback_msg, "intent": intent, "site": site_key}}
                 return
 
@@ -234,14 +253,24 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
             yield {"status": "processing", "step": 5, "message": "Sen đang trả lời..."}
             
             # Tái tạo tin nhắn context (Memory Injection)
-            system_prompt = SEN_CHARACTER_PROMPT
+            current_time = datetime.now().strftime("%H:%M ngày %d/%m/%Y")
+            system_prompt = f"""{SEN_CHARACTER_PROMPT}
+
+[THÔNG TIN THỜI GIAN THỰC]: Hiện tại là {current_time}.
+[QUY TẮC FORMAT]: Nếu có Link/URL, BẮT BUỘC định dạng Markdown: [Tên Link](URL). Không để URL trần.
+[QUY TẮC GỢI Ý]: Khi người dùng nhờ giới thiệu/gợi ý địa điểm đi chơi, HÃY CHỈ tập trung vào các DI SẢN VĂN HÓA, LỊCH SỬ, hoặc DANH LAM THẮNG CẢNH VIỆT NAM (Ví dụ: Hoàng Thành, Văn Miếu, Chùa Một Cột, Nhà Tù Hỏa Lò...). Tránh gợi ý các khu vui chơi giải trí thuần túy trừ khi được hỏi."""
             msgs = [{"role": "system", "content": system_prompt}]
             
             # Short history (Client sends full list but we take last 4 items)
             for entry in history[-4:]:
                  if isinstance(entry, dict):
-                     if 'user_input' in entry: msgs.append({"role": "user", "content": entry['user_input']})
-                     if 'generated_answer' in entry: msgs.append({"role": "assistant", "content": entry['generated_answer']})
+                     # Standard OpenAI format
+                     if 'role' in entry and 'content' in entry:
+                         msgs.append({"role": entry['role'], "content": entry['content']})
+                     # Internal format
+                     else:
+                         if 'user_input' in entry: msgs.append({"role": "user", "content": entry['user_input']})
+                         if 'generated_answer' in entry: msgs.append({"role": "assistant", "content": entry['generated_answer']})
             
             # Prompt chính
             user_p = f"THÔNG TIN TRA CỨU (CONTEXT):\n{final_context}\n\nCÂU HỎI: {u_input}\n\nHãy trả lời dựa trên Context."

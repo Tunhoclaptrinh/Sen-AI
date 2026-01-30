@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DB_NAME = "vector_db"
-COLLECTION_NAME = "culture"
+COLLECTION_NAME = "hesitage"
 # Model 384 chiều tối ưu cho tiếng Việt/đa ngữ
 local_embedder = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 

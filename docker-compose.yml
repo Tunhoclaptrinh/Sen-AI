@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Service chính: Backend FastAPI (Sen NPC)
+  sen-npc:
+    container_name: sen_npc_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Mount thư mục data để nếu bạn sửa file json/prompt ở ngoài, trong Docker cũng nhận luôn
+      - ./data:/app/data
+      # (Tùy chọn) Mount code để dev hot-reload (bỏ comment dòng dưới nếu cần)
+      # - .:/app
+    restart: always
+  # (Tùy chọn) Redis Local - Nếu bạn muốn chạy Redis tại local thay vì Cloud
+  # redis:
+  #   image: redis:alpine
+  #   container_name: sen_npc_redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: always
+
+  # volumes:
+  #   redis_data:

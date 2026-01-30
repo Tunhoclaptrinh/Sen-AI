@@ -259,7 +259,7 @@ class KnowledgeBase:
 
         if not candidates:
             logger.warning(f"❌ Không tìm thấy chunks nào (tất cả fallback đều fail)")
-            return "Không tìm thấy sử liệu liên quan trong kho tri thức."
+            return None # Return None để agentic workflow kích hoạt LLM Fallback
 
         # 2. Rerank (Hybrid: Semantic Score + Keyword Match)
         # Fix: Với Regex candidate (không có 'id'), có thể gây lỗi reranker predict nếu data lạ.
