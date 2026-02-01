@@ -47,7 +47,23 @@ async def generate_tts(text: str) -> str:
     Generate Text-to-Speech: Edge TTS (Primary) -> Google TTS (Fallback).
     Returns: Base64 encoded audio string.
     """
-    clean_text = re.sub(r'[*_`~]', '', text)
+    # 1. Remove Markdown links: [Text](URL) -> Text
+    # This ensures TTS reads the description but skips the http link
+    clean_text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'\1', text)
+
+    # 2. Remove standalone URLs (http/https)
+    clean_text = re.sub(r'http[s]?://\S+', '', clean_text)
+    
+    # 3. Remove Markdown chars (*, _, `, ~)
+    clean_text = re.sub(r'[*_`~]', '', clean_text)
+
+    # 4. Remove ALL Emojis (Unicode ranges for symbols, pictographs, etc.)
+    # Range includes: 1F600-1F64F (Emoticons), 1F300-1F5FF (Symbols), 1F680-1F6FF (Transport), etc.
+    clean_text = re.sub(r'[^\w\s,.;:?!áàảãạăắằẳẵặâấầẩẫậđéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵ]', '', clean_text)
+    
+    # 5. Clean up extra spaces
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+    
     temp_dir = tempfile.gettempdir()
     output_file = os.path.join(temp_dir, f"temp_tts_{uuid4()}.mp3")
     
