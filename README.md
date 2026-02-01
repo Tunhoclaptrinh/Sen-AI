@@ -1,3 +1,13 @@
+---
+title: Sen AI
+emoji: 🌸
+colorFrom: red
+colorTo: pink
+sdk: docker
+pinned: false
+app_port: 7860
+---
+
 # Sen NPC - Agentic RAG Heritage Assistant
 
 ![Status](https://img.shields.io/badge/Status-Active_Development-green)
