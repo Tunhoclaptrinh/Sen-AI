@@ -18,6 +18,7 @@ from agentic_rag_workflow import agentic_workflow
 import io
 from uuid import uuid4
 import edge_tts
+import tempfile
 
 # Tải .env để lấy các biến môi trường
 load_dotenv()
@@ -47,7 +48,8 @@ async def generate_tts(text: str) -> str:
     Returns: Base64 encoded audio string.
     """
     clean_text = re.sub(r'[*_`~]', '', text)
-    output_file = f"temp_tts_{uuid4()}.mp3"
+    temp_dir = tempfile.gettempdir()
+    output_file = os.path.join(temp_dir, f"temp_tts_{uuid4()}.mp3")
     
     # 1. Thử Edge TTS (Giọng hay)
     VOICE_CANDIDATES = ["vi-VN-HoaiMyNeural", "vi-VN-NamMinhNeural"]
