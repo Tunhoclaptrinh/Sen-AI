@@ -88,18 +88,8 @@ async def generate_tts(text: str) -> str:
 # Khởi tạo các thành phần cần thiết cho ứng dụng
 @app.on_event("startup")
 async def startup():
-    # Khởi tạo Redis kết nối (Optional)
-    redis_url = os.getenv("REDIS_URL")
-    if redis_url:
-        try:
-            app.state.redis = redis.from_url(redis_url, decode_responses=True)
-            logger.info("✅ Redis connected.")
-        except Exception as e:
-            logger.warning(f"⚠️ Redis connection failed: {e}. Caching disabled.")
-            app.state.redis = None
-    else:
-        app.state.redis = None
-        logger.warning("⚠️ REDIS_URL not set. Caching disabled.")
+    # Khởi tạo Redis kết nối
+    app.state.redis = redis.from_url(os.getenv("REDIS_URL"), decode_responses=True)
     
     # Khởi tạo OpenAI API
     app.state.openai = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -178,10 +168,8 @@ async def chat_api(request: ChatRequest):
         cache_key = f"sen:cache:{normalized_input}"
         
         # 🔴 BƯỚC 3: Kiểm tra Redis (chỉ cache realtime/heritage)
-        cached_result = None
-        if app.state.redis:
-            logger.info(f"🔍 Kiểm tra cache Redis: {cache_key}")
-            cached_result = await app.state.redis.get(cache_key)
+        logger.info(f"🔍 Kiểm tra cache Redis: {cache_key}")
+        cached_result = await app.state.redis.get(cache_key)
         
         if cached_result:
             logger.info(f"✅ [Step 10] FINISHED (Cache Hit). Data Source: 💾 CACHE (Redis)")
@@ -195,10 +183,9 @@ async def chat_api(request: ChatRequest):
         result["from_cache"] = False
         
         # 🔴 BƯỚC 4: Lưu kết quả vào cache (realtime/rag: 30 phút để có data mới)
-        if app.state.redis:
-            cache_ttl = 1800  # 30 minutes cho realtime/heritage
-            await app.state.redis.setex(cache_key, cache_ttl, json.dumps(result, ensure_ascii=False))
-            logger.info(f"💾 Lưu cache với TTL {cache_ttl}s: {cache_key} (intent: {intent})")
+        cache_ttl = 1800  # 30 minutes cho realtime/heritage
+        await app.state.redis.setex(cache_key, cache_ttl, json.dumps(result, ensure_ascii=False))
+        logger.info(f"💾 Lưu cache với TTL {cache_ttl}s: {cache_key} (intent: {intent})")
         
         return result
     except Exception as e:
@@ -221,7 +208,7 @@ async def chat_stream_api(request: ChatRequest):
     history = request.history
     redis_key = None
     
-    if request.session_id and app.state.redis:
+    if request.session_id:
         redis_key = f"chat_history:{request.session_id}"
         try:
             cached_hist = await app.state.redis.get(redis_key)
@@ -282,7 +269,7 @@ async def chat_stream_api(request: ChatRequest):
                         history.append(new_entry)
                         
                         # 2. Save to Redis (if session exists)
-                        if redis_key and app.state.redis:
+                        if redis_key:
                             trimmed_history = history[-20:]
                             await app.state.redis.set(redis_key, json.dumps(trimmed_history, ensure_ascii=False))
                             logger.info(f"💾 Saved to Redis: {redis_key}")
@@ -383,10 +370,8 @@ async def chat_audio_api(
         normalized_input = " ".join(user_input.lower().split())
         cache_key = f"sen:cache:{normalized_input}"
         
-        cached_result = None
-        if app.state.redis:
-            logger.info(f"🔍 Kiểm tra cache Redis: {cache_key}")
-            cached_result = await app.state.redis.get(cache_key)
+        logger.info(f"🔍 Kiểm tra cache Redis: {cache_key}")
+        cached_result = await app.state.redis.get(cache_key)
         
         if cached_result:
             logger.info(f"✅ [Step 10] FINISHED (Cache Hit). Data Source: 💾 CACHE (Redis)")
@@ -402,10 +387,9 @@ async def chat_audio_api(
         result["transcribed_text"] = user_input
         
         # 🔴 BƯỚC 5: Lưu kết quả vào cache
-        if app.state.redis:
-            cache_ttl = 1800  # 30 minutes
-            await app.state.redis.setex(cache_key, cache_ttl, json.dumps(result, ensure_ascii=False))
-            logger.info(f"💾 Lưu cache với TTL {cache_ttl}s: {cache_key} (intent: {intent})")
+        cache_ttl = 1800  # 30 minutes
+        await app.state.redis.setex(cache_key, cache_ttl, json.dumps(result, ensure_ascii=False))
+        logger.info(f"💾 Lưu cache với TTL {cache_ttl}s: {cache_key} (intent: {intent})")
         
         return result
         
@@ -465,9 +449,6 @@ async def cache_stats():
     Hiển thị danh sách các câu hỏi đã cache và TTL còn lại.
     """
     try:
-        if not app.state.redis:
-             return {"message": "Redis not configured", "cache_entries": [], "total_cached_queries": 0}
-
         # Lấy tất cả keys trong redis có pattern "sen:cache:*"
         keys = await app.state.redis.keys("sen:cache:*")
         
@@ -507,9 +488,6 @@ async def clear_cache():
     Endpoint xóa toàn bộ cache redis (Public for now, should move to admin router).
     """
     try:
-        if not app.state.redis:
-             return {"status": "error", "message": "Redis not configured"}
-
         keys = await app.state.redis.keys("sen:cache:*")
         if keys:
             await app.state.redis.delete(*keys)
@@ -527,9 +505,6 @@ async def delete_cache_entry(query: str):
     Endpoint xóa một entry cụ thể trong cache.
     """
     try:
-        if not app.state.redis:
-             return {"message": "Redis not configured", "deleted": False}
-
         normalized_query = " ".join(query.lower().split())
         cache_key = f"sen:cache:{normalized_query}"
         
@@ -581,7 +556,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
         # [Redis Load]
         redis_key = None
-        if session_id and app.state.redis:
+        if session_id:
             redis_key = f"chat_history:{session_id}"
             try:
                 cached = await app.state.redis.get(redis_key)
@@ -663,7 +638,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     }
                     
                     history.append(new_entry)
-                    if redis_key and app.state.redis:
+                    if redis_key:
                         await app.state.redis.set(redis_key, json.dumps(history[-20:], ensure_ascii=False))
                     
                     # File Log
