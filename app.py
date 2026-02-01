@@ -50,11 +50,11 @@ async def generate_tts(text: str) -> str:
     output_file = f"temp_tts_{uuid4()}.mp3"
     
     # 1. Thử Edge TTS (Giọng hay)
-    VOICE_CANDIDATES = ["vi-VN-NamMinhNeural", "vi-VN-HoaiMyNeural"]
+    VOICE_CANDIDATES = ["vi-VN-HoaiMyNeural", "vi-VN-NamMinhNeural"]
     for voice in VOICE_CANDIDATES:
         try:
             # Tăng tốc độ đọc lên đáng kể theo yêu cầu
-            communicate = edge_tts.Communicate(clean_text, voice, rate="+75%")
+            communicate = edge_tts.Communicate(clean_text, voice, rate="+30%")
             await communicate.save(output_file)
             
             if os.path.exists(output_file) and os.path.getsize(output_file) > 100:
@@ -522,7 +522,35 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
         data = await websocket.receive_json()
-        user_input = data.get("user_input")
+        
+        # Determine Input Type
+        # msg_type = data.get("type", "text_input") # default to text if missing
+        # user_input = ""
+        
+        # if msg_type == "audio_input":
+        #      audio_b64 = data.get("audio")
+        #      if audio_b64:
+        #          import io
+        #          # Decode Base64
+        #          audio_bytes = base64.b64decode(audio_b64)
+        #          # Transcribe via Whisper
+        #          transcript = await app.state.openai.audio.transcriptions.create(
+        #             model="whisper-1",
+        #             file=("audio.webm", io.BytesIO(audio_bytes), "audio/webm")
+        #          )
+        #          user_input = transcript.text
+        #          logger.info(f"🎙️ WS Audio Transcribed: {user_input}")
+                 
+        #          # Send transcription back to UI (optional but good for UX)
+        #          await websocket.send_json({"type": "text", "content": f"🎤 {user_input}"}) # Or logic to show user prompt
+        
+        # elif msg_type == "text_input":
+        #      user_input = data.get("text")
+             
+        # # Fallback / Legacy
+        # if not user_input:
+        #      user_input = data.get("user_input", "")
+
         session_id = data.get("session_id")
         history = data.get("history", [])
 

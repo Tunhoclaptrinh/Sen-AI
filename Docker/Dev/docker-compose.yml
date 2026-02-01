@@ -1,0 +1,23 @@
+
+
+services:
+  sen-ai-dev:
+    build: 
+      context: ../..
+      dockerfile: Docker/Dev/Dockerfile
+    container_name: sen_ai_dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../..:/app  # Hot-reload mapping
+    env_file:
+      - ../../.env
+    restart: unless-stopped
+    networks:
+      - sen-network-dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  sen-network-dev:
+    external: true

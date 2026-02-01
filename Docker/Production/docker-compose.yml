@@ -1,0 +1,21 @@
+
+
+services:
+  sen-ai-prod:
+    build: 
+      context: ../..
+      dockerfile: Docker/Production/Dockerfile
+    container_name: sen_ai_prod
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../../.env
+    restart: always
+    networks:
+      - sen-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  sen-network:
+    external: true

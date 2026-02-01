@@ -2,10 +2,13 @@ import json
 import logging
 import asyncio
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from knowledge_base import KnowledgeBase
 from heritage_tool import HeritageTools
 from prompts import get_planner_prompt, SEN_CHARACTER_PROMPT
 from data_manager import get_default_site_key
+# Vietnam timezone
+VN_TZ = ZoneInfo('Asia/Ho_Chi_Minh')
 
 # Khởi tạo logger
 logger = logging.getLogger("uvicorn")
@@ -24,37 +27,8 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         yield {"status": "processing", "step": 1, "message": "Đang phân tích câu hỏi..."}
         norm_input = state.brain.normalize_query(u_input)
         
-        # --- REDIS CACHE CHECK (Only for consistent queries, can optimize later) ---
-        # Chiến lược: Kiểm tra cache trước. Nếu hit cache HERITAGE -> Stream giả lập từ cache.
-        # Realtime không dùng cache này để đảm bảo tươi mới.
-        cache_key = f"sen:cache:{norm_input}"
-        cached_data = None
-        try:
-            if state.redis:
-                cached_json = await state.redis.get(cache_key)
-                if cached_json:
-                    data = json.loads(cached_json)
-                    # CHỈ DÙNG CACHE NẾU LÀ HERITAGE
-                    if data.get("intent") == "heritage":
-                        cached_data = data
-        except Exception as e:
-            logger.warning(f"Redis Check Error: {e}")
-
-        if cached_data:
-            yield {"status": "processing", "step": 1.1, "message": "Đã tìm thấy câu trả lời trong bộ nhớ (Cache)..."}
-            logger.info(f"✅ Cache Hit: {cache_key}")
-            
-            # Stream giả lập từ text có sẵn
-            full_text = cached_data.get("answer", "")
-            chunk_size = 10
-            for i in range(0, len(full_text), chunk_size):
-                yield {"status": "streaming", "content": full_text[i:i+chunk_size]}
-                await asyncio.sleep(0.01) # Giả lập độ trễ tí xíu cho mượt
-                
-            yield {"status": "finished", "result": cached_data}
-            return
-
         # Build history string
+
         hist_str = ""
         for i, entry in enumerate(history[-6:]):
             if isinstance(entry, dict):
@@ -93,6 +67,35 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
                     search_query = rewrite
             except Exception as e:
                 logger.error(f"❌ Rewrite error: {e}")
+        
+        # --- REDIS CACHE CHECK (after query rewrite) ---
+        # Cache key sử dụng query đã được rewrite để đảm bảo context chính xác
+        cache_key = f"sen:cache:{search_query}"
+        cached_data = None
+        try:
+            if state.redis:
+                cached_json = await state.redis.get(cache_key)
+                if cached_json:
+                    data = json.loads(cached_json)
+                    # CHỈ DÙNG CACHE NẾU LÀ HERITAGE
+                    if data.get("intent") == "heritage":
+                        cached_data = data
+        except Exception as e:
+            logger.warning(f"Redis Check Error: {e}")
+
+        if cached_data:
+            yield {"status": "processing", "step": 1.1, "message": "Đã tìm thấy câu trả lời trong bộ nhớ (Cache)..."}
+            logger.info(f"✅ Cache Hit: {cache_key}")
+            
+            # Stream giả lập từ text có sẵn
+            full_text = cached_data.get("answer", "")
+            chunk_size = 10
+            for i in range(0, len(full_text), chunk_size):
+                yield {"status": "streaming", "content": full_text[i:i+chunk_size]}
+                await asyncio.sleep(0.01)
+                
+            yield {"status": "finished", "result": cached_data}
+            return
 
         # [STEP 1.5] Semantic Site Retrieval (Routing using Search Query)
         yield {"status": "processing", "step": 1.5, "message": "Đang định tuyến ngữ nghĩa..."}
@@ -144,12 +147,12 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         # --- CASE B: CHITCHAT ---
         if intent == "chitchat":
             # Inject Current Time
-            current_time = datetime.now().strftime("%H:%M ngày %d/%m/%Y")
+            current_time = datetime.now(VN_TZ).strftime("%H:%M ngày %d/%m/%Y")
             system_msg = f"""{SEN_CHARACTER_PROMPT}
 
 [THÔNG TIN THỜI GIAN THỰC]: Hiện tại là {current_time}.
 [QUY TẮC FORMAT]: Nếu có Link/URL, BẮT BUỘC định dạng Markdown: [Tên Link](URL). Không để URL trần.
-[QUY TẮC GỢI Ý]: Khi người dùng nhờ giới thiệu/gợi ý địa điểm đi chơi, HÃY CHỈ tập trung vào các DI SẢN VĂN HÓA, LỊCH SỬ, hoặc DANH LAM THẮNG CẢNH VIỆT NAM (Ví dụ: Hoàng Thành, Văn Miếu, Chùa Một Cột, Nhà Tù Hỏa Lò...). Tránh gợi ý các khu vui chơi giải trí thuần túy trừ khi được hỏi."""
+[QUY TẮC GỢI Ý]: Khi người dùng nhờ giới thiệu/gợi ý địa điểm đi chơi, HÃY CHỈ tập trung vào các DI SẢN VĂN HÓA, LỊCH SỬ, hoặc DANH LAM THẮNG CẢNH VIỆT NAM. Tránh gợi ý các khu vui chơi giải trí thuần túy trừ khi được hỏi."""
             
             res = await state.openai.chat.completions.create(
                 model="gpt-4o-mini",
@@ -253,7 +256,7 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
             yield {"status": "processing", "step": 5, "message": "Sen đang trả lời..."}
             
             # Tái tạo tin nhắn context (Memory Injection)
-            current_time = datetime.now().strftime("%H:%M ngày %d/%m/%Y")
+            current_time = datetime.now(VN_TZ).strftime("%H:%M ngày %d/%m/%Y")
             system_prompt = f"""{SEN_CHARACTER_PROMPT}
 
 [THÔNG TIN THỜI GIAN THỰC]: Hiện tại là {current_time}.
@@ -335,7 +338,7 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
 
         # [FINISH]
         final_res = await _build_response_data(state, full_answer, intent, site_key, source_type, debug_col, debug_filter)
-        final_res["audio"] = audio_b64
+        final_res["audio_base64"] = audio_b64
         
         # --- REDIS SET (SAVE CACHE) ---
         # CHỈ LƯU NẾU LÀ HERITAGE

@@ -266,13 +266,18 @@ class KnowledgeBase:
         # Clean candidates list
         valid_candidates = [c for c in candidates if 'content' in c]
         
+        if not valid_candidates:
+            return None
+        
         logger.info(f"🔄 [RERANK] Processing {len(valid_candidates)} candidates...")
         pairs = [[query, c['content']] for c in valid_candidates]
         scores = self.reranker.predict(pairs)
 
         for i, res in enumerate(valid_candidates):
             k_boost = self._keyword_boost(res['content'], query)
-            res['final_score'] = (scores[i] * 0.7) + (k_boost * 0.3)
+            # Adjust score calculation
+            base_score = scores[i]
+            res['final_score'] = (base_score * 0.7) + (k_boost * 0.3)
 
         valid_candidates.sort(key=lambda x: x['final_score'], reverse=True)
         
