@@ -339,7 +339,8 @@ async def tts_endpoint(req: TTSRequest):
 @app.post("/chat-audio")
 async def chat_audio_api(
     audio_file: UploadFile = File(...),
-    history: str = ""
+    history: str = Form(""),
+    transcribe_only: bool = Form(False)
 ):
     """
     API nhận audio từ người dùng.
@@ -349,7 +350,7 @@ async def chat_audio_api(
         import json
         
         logger.info(f"\n{'='*80}")
-        logger.info(f"🎙️ AUDIO INPUT: {audio_file.filename}")
+        logger.info(f"🎙️ AUDIO INPUT: {audio_file.filename} (TranscribeOnly: {transcribe_only})")
         logger.info(f"{'='*80}")
         
         # 🔴 BƯỚC 1: Convert audio to text (STT using OpenAI Whisper)
@@ -365,6 +366,17 @@ async def chat_audio_api(
         user_input = transcript.text
         logger.info(f"✅ STT Result: {user_input}")
         
+        # [FEATURE] Transcribe Only Mode: Return immediately
+        if transcribe_only:
+             logger.info("⚡ Transcribe Only mode - Returning text immediately.")
+             return {
+                 "intent": "transcribe",
+                 "transcribed_text": user_input,
+                 "answer": "",
+                 "audio": "",
+                 "from_cache": False
+             }
+
         # Parse history từ JSON string
         try:
             history_list = json.loads(history) if history else []
