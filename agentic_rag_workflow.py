@@ -336,9 +336,20 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         except Exception as e:
             logger.error(f"❌ Auto TTS Failed: {e}")
 
+        # [EMOTION ANALYSIS] 🎭 Phân tích biểu cảm
+        emotion_data = {}
+        try:
+            from emotion_analyzer import EmotionAnalyzer
+            emotion_data = EmotionAnalyzer.analyze(u_input, full_answer, intent)
+            logger.info(f"🎭 Emotion selected: {emotion_data}")
+        except Exception as e:
+            logger.error(f"❌ Emotion Analysis failed: {e}")
+            emotion_data = {"gesture": "normal", "mouthState": "smile", "eyeState": "normal"}
+
         # [FINISH]
         final_res = await _build_response_data(state, full_answer, intent, site_key, source_type, debug_col, debug_filter)
         final_res["audio_base64"] = audio_b64
+        final_res["emotion"] = emotion_data  # ✨ Thêm emotion metadata
         
         # --- REDIS SET (SAVE CACHE) ---
         # CHỈ LƯU NẾU LÀ HERITAGE
