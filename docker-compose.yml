@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  sen-api:
+    build: .
+    container_name: sen-ai-api
+    ports:
+      - "8000:7860" # Map host 8000 to container 7860 (default in Dockerfile)
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - BOT_NAME=${BOT_NAME:-Sen}
+      - ENABLE_VERIFIER=${ENABLE_VERIFIER:-true}
+    volumes:
+      - ./data/documents:/app/data/documents # Mount documents for easy update
+      - ./data/monuments.json:/app/data/monuments.json # Mount config
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: sen-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  redis_data:

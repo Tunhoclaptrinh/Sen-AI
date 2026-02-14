@@ -1,299 +1,230 @@
 ---
-title: Sen AI
+title: Sen AI - Trợ Lý Di Sản
 emoji: 🌸
 colorFrom: red
 colorTo: pink
 sdk: docker
 pinned: false
-app_port: 7860
+app_port: 8000
 ---
 
-# Sen NPC - Agentic RAG Heritage Assistant
+# 🌸 Sen AI - Trợ Lý Ảo Di Sản Thông Minh
+> *Hệ thống Agentic RAG tương tác giọng nói dành cho Di Sản Văn Hóa Việt Nam.*
 
-![Status](https://img.shields.io/badge/Status-Active_Development-green)
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![Architecture](https://img.shields.io/badge/Architecture-Agentic_RAG-orange)
+![Status](https://img.shields.io/badge/Status-Active_Development-green?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.0.0-blue?style=flat-square)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square)
+![Architecture](https://img.shields.io/badge/Architecture-Clean_Agentic_RAG-orange?style=flat-square)
 
-> **"Không chỉ là Hỏi-Đáp. Đây là Trải nghiệm Nghe-Nhìn về Di sản."**
->
-> Sen NPC là một trợ lý ảo thông minh (AI Agent) chuyên biệt cho lĩnh vực Di sản & Văn hóa Việt Nam, tích hợp khả năng giao tiếp Voice-to-Voice, tra cứu Semantic Search thời gian thực và tự động kiểm chứng nội dung.
+## 📖 Tổng Quan (Overview)
 
----
-## 📑 Mục lục
-1. [Tổng quan (Overview)](#-tổng-quan-overview)
-2. [Tính năng Chính (Key Features)](#-tính-năng-chính-key-features)
-3. [Kiến trúc Hệ thống (Architecture)](#-kiến-trúc-hệ-thống-architecture)
-4. [Cấu trúc Dự án (Project Structure)](#-cấu-trúc-dự-án-project-structure)
-5. [Yêu cầu Tiền quyết (Prerequisites)](#-yêu-cầu-tiền-quyết-prerequisites)
-6. [Cài đặt & Chạy Local (Quickstart)](#-cài-đặt--chạy-local-quickstart)
-7. [Cấu hình (Configuration)](#-cấu-hình-configuration)
-8. [API Reference](#-api-reference)
-9. [Triển khai Production (Deployment)](#-triển-khai-production-deployment)
-10. [Bảo mật & Vận hành (Security & Ops)](#-bảo-mật--vận-hành-security--ops)
-11. [Xử lý sự cố (Troubleshooting)](#-xử-lý-sự-cố-troubleshooting)
+**Sen AI** là một AI Agent chuyên biệt được thiết kế để cung cấp thông tin sâu sắc, chính xác và hấp dẫn về lịch sử và văn hóa Việt Nam. Khác với các mô hình ngôn ngữ chung (LLM) dễ bị "ảo giác" (hallucination), Sen AI sử dụng phương pháp **Strict RAG (Retrieval-Augmented Generation)** kết hợp với **Công cụ Thời gian thực (Real-time Tools)**. Điều này đảm bảo thông tin luôn chính xác trong khi vẫn duy trì cuộc trò chuyện tự nhiên, đậm chất nhân vật.
 
----
+### 🌟 Tính Năng Nổi Bật
 
-## 🔭 Tổng quan (Overview)
-
-### 🎯 Mục tiêu (Goals)
-*   Cung cấp trải nghiệm hỏi đáp tự nhiên về lịch sử, di tích Việt Nam thông qua giọng nói.
-*   Giải quyết vấn đề "ảo giác" (hallucination) thường gặp ở LLM bằng cơ chế **Strict RAG** & **Verifier**.
-*   Cung cấp thông tin thiết thực (giá vé, giờ mở cửa, thời tiết) thông qua Live Tools.
-
-### ⛔ Giới hạn (Non-goals)
-*   Không phải là Chatbot đa năng (như ChatGPT) để code, làm toán hay tâm sự chuyện đời tư.
-*   Không lưu trữ vĩnh viễn lịch sử chat của user (Stateless REST API design).
+- **🎙️ Tương Tác Giọng Nói (Voice-to-Voice):** Giao tiếp bằng lời nói mượt mà sử dụng OpenAI Whisper (STT) và EdgeTTS/GoogleTTS (TTS).
+- **🧠 Luồng Xử Lý Thông Minh (Agentic Workflow):** Bộ điều phối (Planner) thông minh sẽ tự động chuyển đổi giữa các chế độ:
+    - **Chế Độ Di Sản (Heritage Mode):** Tra cứu sâu từ Vector DB (RAG) cho các câu hỏi lịch sử.
+    - **Chế Độ Thời Gian Thực (Realtime Mode):** Lấy dữ liệu sống (thời tiết, giá vé, giờ mở cửa).
+    - **Chế Độ Trò Chuyện (Chitchat Mode):** Giao tiếp xã giao, giữ vững tính cách nhân vật (Persona).
+- **📚 Tìm Kiếm Lai & Xếp Hạng Lại (Hybrid Search & Reranking):** Kết hợp Tìm kiếm Ngữ nghĩa (Vector Search) với Tăng cường Từ khóa (Keyword Boosting) và Cross-Encoder Reranking để đạt độ chính xác cao nhất.
+- **🛡️ Bộ Kiểm Chứng (Strict Verifier):** Lớp bảo vệ AI giúp đối chiếu câu trả lời với ngữ cảnh gốc để ngăn chặn thông tin sai lệch.
+- **⚡ Hiệu Suất Cao:** Chiến lược Caching Redis và kiến trúc tối ưu hóa cho độ trễ thấp.
 
 ---
 
-## ✨ Tính năng Chính (Key Features)
+## 🏗️ Kiến Trúc Hệ Thống & Khả Năng Mở Rộng
 
-*   **🎙️ Voice-to-Voice Interaction:** Tích hợp OpenAI Whisper (STT) và EdgeTTS/GoogleTTS (TTS) cho phản hồi giọng nói tự nhiên.
-*   **🧠 Agentic Workflow:** Sử dụng LLM Planner để định tuyến thông minh giữa:
-    *   **Heritage:** Tra cứu kiến thức lịch sử (RAG).
-    *   **Realtime:** Tra cứu thời tiết, link đặt vé, giờ mở cửa.
-    *   **Chitchat:** Giao tiếp xã giao.
-*   **📚 Hybrid Search RAG:** Kết hợp Vector Search (Semantic) + Keyword Boosting + Re-ranking để tìm kiếm thông tin chính xác nhất.
-*   **🛡️ Strict Mode & Verifier:**
-    *   Chặn trả lời nếu độ khớp câu hỏi thấp (Threshold checking).
-    *   Lớp bảo vệ (Verifier) dùng LLM để rà soát lại câu trả lời trước khi gửi (đảm bảo không bịa đặt).
-*   **⚡ Smart Caching:** Redis Cache cho các câu hỏi lặp lại (TTL 1 giờ), giảm chi phí LLM và độ trễ.
-*   **🔗 Dynamic Config:** Cấu hình địa điểm, link vé, mô tả ngữ nghĩa qua file JSON nóng (không cần sửa code).
+Dự án tuân theo **Kiến Trúc Modular Service-Repository**, được thiết kế đặc biệt để tách biệt **Core AI (Trí tuệ)** khỏi **Luồng Game (Điều phối)**.
 
----
+### Tại sao lại chọn kiến trúc này?
+Thiết kế này đảm bảo rằng **các nâng cấp trong tương lai sẽ KHÔNG làm hỏng Game**.
+- **Tình huống:** Bạn muốn nâng cấp từ Vector Search sang **Knowledge Graph**.
+- **Giải pháp:** Bạn chỉ cần viết lại file `app/services/knowledge.py`. Client Game và các API Endpoint (`main.py`) vẫn giữ nguyên 100%.
+- **Tình huống:** Bạn muốn triển khai suy luận phức tạp bằng **LangGraph**.
+- **Giải pháp:** Bạn cập nhật `app/services/workflow.py`. Phần "Bộ não" (Knowledge Base) và "Miệng" (TTS) không bị ảnh hưởng.
 
-## 🏗 Kiến trúc Hệ thống (Architecture)
-
-### Agentic RAG Workflow
-
-```ascii
-User Input (Audio/Text)
-       ⬇
-[STT Service (Whisper)]
-       ⬇
-[🔍 Semantic Router / Planner] ───(Out of Scope)──➡ ⛔ Từ chối
-       │
-       ├────(Chitchat) ──────➡ [💬 Persona Engine] ──➡ (To Synthesize)
-       │
-       ├────(Realtime) ──────➡ [🛠️ External Tools] (Weather, Time, Ticket Links)
-       │                              ⬇
-       └────(Heritage) ──────➡ [💾 Redis Cache Check]
-                                      │
-              (Cache Miss) ⬅─────────┘
-                   │
-           [📚 Vector DB Retrieval] (MongoDB Atlas)
-                   ⬇
-           [📊 Cross-Encoder Rerank] ──(Low Score)──➡ ⛔ "Không tìm thấy thông tin"
-                   ⬇
-           [🧠 Contextual Synthesis] (GPT-4o)
-                   ⬇
-           [🕵️ Content Verifier] (Optional Safety Layer)
-                   ⬇
-[🔊 TTS Synthesizer] (Edge/Google/OpenAI)
-       ⬇
-Response (Text + Audio)
+```mermaid
+graph TD
+    Client[Game Client / Frontend] <-->|JSON REST API| Main[main.py (Lớp API)]
+    
+    subgraph "Core Ứng Dụng (Ổn định)"
+        Main <--> Workflow[app.services.workflow]
+    end
+    
+    subgraph "Năng Lực AI (Có thể cắm thêm)"
+        Workflow -->|Lấy Thông Tin| Knowledge[app.services.knowledge]
+        Workflow -->|Kiểm Tra An Toàn| Verifier[app.services.verifier]
+        Workflow -->|Dữ Liệu Thời Gian Thực| Tools[app.services.tools]
+    end
+    
+    subgraph "Lớp Dữ Liệu (Có thể thay thế)"
+        Knowledge <-->|Vector Search| MongoDB[(MongoDB Atlas)]
+        Knowledge -.->|Nâng Cấp Tương Lai| KnowledgeGraph[(Neo4j / GraphDB)]
+    end
 ```
 
-### Giải thích Module
-*   **Router (Planner):** Phân tích intent người dùng dựa trên từ khóa và ngữ nghĩa (Prompt Engineering).
-*   **Retriever:** Query Vector DB (MongoDB Atlas) sử dụng embeddings (`paraphrase-multilingual-MiniLM-L12-v2`).
-*   **Verifier:** Một LLM instance riêng biệt, đóng vai "Cảnh sát" so sánh câu trả lời với Context gốc.
-*   **Ingestor:** Script độc lập giúp nạp dữ liệu từ file Text/MD vào Vector DB.
+### Chi Tiết Các Thành Phần Cốt Lõi
+
+1.  **Bộ Điều Phối Workflow (`app.services.workflow`)**: 
+    - *Vai trò:* "Nhạc trưởng". Nó quyết định *làm gì* dựa trên đầu vào của người dùng (Di sản vs. Thời gian thực vs. Trò chuyện).
+    - *Độ ổn định:* Cao. Thay đổi ở đây chỉ ảnh hưởng đến *luồng hội thoại*, không ảnh hưởng đến việc lấy dữ liệu.
+    
+2.  **Cơ Sở Tri Thức (`app.services.knowledge`)**: 
+    - *Vai trò:* "Bộ não". Nó xử lý *cách* lấy thông tin. Hiện tại đang sử dụng **Vector Search**. 
+    - *Khả năng mở rộng:* **Đây là lớp trừu tượng của bạn.** Để triển khai Knowledge Graph, bạn chỉ cần tạo một phương thức mới ở đây. Phần còn lại của ứng dụng chỉ gọi `brain.search()`, không quan tâm đến công nghệ bên dưới là gì.
+
+3.  **Trình Điều Khiển Vector DB (`app.core.vector_db`)**: 
+    - *Vai trò:* "Tài xế". Kết nối cấp thấp đến MongoDB. 
 
 ---
 
-## � Cấu trúc Dự án (Project Structure)
+## 📁 Cấu Trúc Dự Án & Trách Nhiệm File
+
+Hiểu rõ `ai làm gì` giúp việc bảo trì dễ dàng hơn:
 
 ```bash
-STT-Agentic-RAG/
-├── .env                  # (Gitignored) Biến môi trường & Secrets
-├── .gitignore            # Cấu hình Git ignore
-├── app.py                # Main Entry: FastAPI Server
-├── agentic_rag_workflow.py # Core Logic: Workflow điều phối Agent
-├── heritage_tool.py      # Tools: Weather, Ticket, Opening Status
-├── knowledge_base.py     # RAG: Search, Rerank, Embedding logic
-├── verifier.py           # Safety: Kiểm chứng nội dung
-├── prompts.py            # Quản lý & Load Prompts
-├── ingest_data.py        # Script: Nạp dữ liệu vào DB
-├── clear_cache.py        # Script: Xóa Redis Cache
-├── requirements.txt      # Python Dependencies
-├── data/
-│   ├── documents/        # Folder chứa file text/md cần nạp
-│   ├── monuments.json    # Config các địa điểm (Metadata, Links)
-│   └── prompts.json      # File chứa Prompt (Planner, Persona, etc)
-└── README.md             # Tài liệu dự án
+sen-ai/
+├── app/                        
+│   ├── core/                   # 🧱 LỚP HẠ TẦNG (INFRASTRUCTURE)
+│   │   ├── vector_db.py        # Database Driver. Xử lý kết nối & truy vấn MongoDB.
+│   │   ├── config_loader.py    # Load 'monuments.json'. Thêm địa điểm mới? Kiểm tra file này.
+│   │   ├── config_prompts.py   # Load system prompts. Đổi tính cách AI? Kiểm tra file này.
+│   │   └── __init__.py
+│   │
+│   ├── services/               # 🧠 LỚP TRÍ TUỆ (INTELLIGENCE)
+│   │   ├── workflow.py         # "Vòng lặp chính". Quyết định Intent -> RAG -> Phản hồi.
+│   │   ├── knowledge.py        # Động cơ Tìm kiếm. Logic Hybrid Search nằm ở đây.
+│   │   ├── tools.py            # API bên ngoài (Thời tiết, Giá vé).
+│   │   ├── verifier.py         # Bộ lọc an toàn. Kiểm tra ảo giác (hallucinations).
+│   │   ├── emotion.py          # Phân tích cảm xúc cho biểu cảm Avatar 3D.
+│   │   └── __init__.py
+│   │
+│   ├── utils/                  # 🛠️ CÔNG CỤ TIỆN ÍCH
+│   │   ├── cache.py            # Helper cho Redis.
+│   │   ├── cleaner.py          # Dọn dẹp file tạm.
+│   │   └── __init__.py
+│   └── __init__.py
+│
+├── data/                       # 📂 TÀI SẢN DỮ LIỆU
+│   ├── documents/              # Đặt file .md, .pdf, .docx của bạn vào đây để Ingest.
+│   ├── monuments.json          # DATABASE REGISTRY. Định nghĩa Metadata địa điểm ở đây.
+│   └── prompts.json            # SYSTEM PROMPTS. Chỉnh sửa tính cách AI ở đây.
+│
+├── scripts/                    # ⚙️ VẬN HÀNH
+│   └── ingest.py               # CHẠY FILE NÀY để cập nhật database khi bạn thêm file mới.
+│
+├── main.py                     # 🚦 CỔNG API. Định nghĩa endpoints (/chat, /chat-audio).
+├── Dockerfile                  # Cấu hình Triển khai Production.
+├── docker-compose.yml          # Khởi chạy 1 chạm (App + Redis).
+└── requirements.txt            # Thư viện Python phụ thuộc.
 ```
 
 ---
 
-## ✅ Yêu cầu Tiền quyết (Prerequisites)
+## 🚀 Bắt Đầu Nhanh (Quick Start)
 
-*   **OS:** Windows 10/11, macOS, hoặc Linux.
-*   **Python:** 3.10 trở lên.
-*   **Database:**
-    *   **MongoDB Atlas:** Cluster M0 (Free) trở lên (bật Vector Search).
-    *   **Redis:** Local server hoặc Cloud (Upstash/RedisLabs).
-*   **API Keys:** OpenAI API Key (có credit).
+### Yêu Cầu Tiền Quyết
+- **Python 3.10+**
+- **MongoDB Atlas** (Cluster M0+ đã bật Vector Search)
+- **Redis** (Local hoặc Cloud)
+- **OpenAI API Key**
 
----
+### 1. Cài Đặt
 
-## 🚀 Cài đặt & Chạy Local (Quickstart)
-
-### 1. Clone & Setup Environment
 ```bash
-git clone <your-repo-url>
-cd STT-Agentic-RAG
+# Clone repository
+git clone <repository_url>
+cd sen-ai
+
+# Tạo môi trường ảo (Virtual Environment)
 python -m venv .venv
 
-# Windows
+# Kích hoạt (Windows)
 .venv\Scripts\activate
-# Linux/Mac
+
+# Kích hoạt (Linux/Mac)
 source .venv/bin/activate
 
+# Cài đặt thư viện
 pip install -r requirements.txt
 ```
 
-### 2. Cấu hình Environment
-Tạo file `.env` từ template bên dưới và điền API Key vào:
+### 2. Cấu Hình
+
+Tạo file `.env` ở thư mục gốc:
+
 ```ini
-MONGODB_URI=mongodb+srv://<user>:<pass>@cluster...
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster...
 OPENAI_API_KEY=sk-...
-REDIS_URL=redis://...
+REDIS_URL=redis://localhost:6379
 BOT_NAME=Sen
 ENABLE_VERIFIER=true
+DOCUMENTS_SRC_DIR=./data/documents
 ```
 
-### 3. Nạp Dữ liệu (Ingest Data)
-Chuẩn bị file nội dung vào `data/documents/` (ví dụ `lam_son.txt`), sau đó chạy:
+### 3. Nạp Dữ Liệu (Data Ingestion)
+
+Nạp các tài liệu kiến thức (Markdown, PDF, DOCX):
+
 ```bash
-python ingest_data.py
+# Đặt file vào data/documents/
+# Chạy script ingest
+python ingest.py
 ```
 
-### 4. Khởi chạy Server
+### 4. Chạy Server
+
 ```bash
-python -m uvicorn app:app --port 8000 --reload
+# Khởi chạy FastAPI server
+python -m uvicorn main:app --port 8000 --reload
 ```
-*   API Docs: `http://localhost:8000/docs`
-*   Health Check: `http://localhost:8000/`
 
 ---
 
-## ⚙️ Cấu hình (Configuration)
+## 📚 Tài Liệu API
 
-### Các tham số quan trọng (.env)
-
-| Biến | Mô tả | Mặc định/Ví dụ |
-| :--- | :--- | :--- |
-| `MONGODB_URI` | Kết nối Vector DB | `mongodb+srv://...` |
-| `OPENAI_API_KEY` | Key chạy LLM & STT | `sk-...` |
-| `REDIS_URL` | Kết nối Cache | `redis://localhost:6379` |
-| `BOT_NAME` | Tên nhân vật NPC | `Sen` |
-| `ENABLE_VERIFIER` | Bật/Tắt kiểm duyệt | `true` hoặc `false` |
-
-### Cấu hình RAG & Tools
-*   **Chunk Size:** 800 tokens (Hardcoded trong `ingest_data.py`).
-*   **Top K Retrieval:** 15 candidates.
-*   **Reranker Threshold:** -2.0 (Trong `knowledge_base.py`).
-*   **Cache TTL:** 3600 giây (1 giờ).
-
----
-
-## � API Reference
-
-### 1. Chat Text
-*   **Endpoint:** `POST /chat`
-*   **Description:** Giao tiếp bằng văn bản.
-*   **Body:**
-    ```json
-    {
-      "user_input": "Hoàng Thành Thăng Long ở đâu?",
-      "history": [] 
-    }
-    ```
-
-### 2. Chat Audio (Voice-to-Voice)
-*   **Endpoint:** `POST /chat-audio`
-*   **Description:** Upload file âm thanh, nhận về text và audio câu trả lời.
-*   **Body (Multipart):** `file: <audio.wav/mp3/webm>`
-
-### 3. Quản lý Cache
-*   **Endpoint:** `POST /cache/clear`
-*   **Description:** Xóa toàn bộ bộ nhớ Redis của Bot.
-
----
-
-## 🚢 Triển khai Production (Deployment)
-
-### Mô hình đề xuất
-Sử dụng **Docker** (TODO: Cần tạo Dockerfile) hoặc chạy trực tiếp với **PM2/Systemd** phía sau **Nginx**.
-
-### Nginx Reverse Proxy Config (Ví dụ)
-```nginx
-server {
-    listen 80;
-    server_name api.sennpc.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        
-        # Cấu hình cho WebSocket (nếu dùng)
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
+### Chat Endpoint
+**POST** `/chat`
+```json
+{
+  "user_input": "Hoàng Thành Thăng Long có gì đặc biệt?",
+  "history": []
 }
 ```
 
-### Ghi chú Scale
-*   **Stateless:** API hiện tại là stateless (History gửi từ client), nên có thể chạy nhiều Worker (`uvicorn app:app --workers 4`).
-*   **Redis:** Đảm bảo dùng chung Redis instance nếu scale nhiều server để đồng bộ Cache.
+### Real-time Streaming
+**POST** `/chat/stream`
+*Trả về Server-Sent Events (SSE) để hiển thị trạng thái đang suy nghĩ và sinh câu trả lời theo thời gian thực.*
+
+### Tương Tác Giọng Nói
+**POST** `/chat-audio`
+*Nhận `multipart/form-data` chứa file âm thanh. Trả về phản hồi dạng âm thanh.*
 
 ---
 
-## �️ Bảo mật & Vận hành (Security & Ops)
+## 🛠️ Bảo Trì & Vận Hành
 
-### Security Checklist
-*   [x] **HTTPS:** Bắt buộc sử dụng SSL (Let's Encrypt) khi deploy live để trình duyệt cho phép ghi âm.
-*   [x] **API Keys:** Không bao giờ commit `.env`.
-*   [ ] **Rate Limit:** TODO: Cần thêm middleware giới hạn request/phút để tránh DDOS hoặc tốn tiền OpenAI.
-*   [ ] **Auth:** TODO: Thêm cơ chế API Key hoặc JWT cho Client nếu cần bán dịch vụ.
+- **Xóa Cache:**
+  ```bash
+  python -m app.utils.cache
+  ```
+  *(Hoặc gọi POST `/cache/clear`)*
 
-### Observability
-*   **Logging:** Hệ thống log ra console (stdout). Nên pipe vào CloudWatch hoặc Filebeat.
-*   **Trace ID:** Hiện tại log theo flow. TODO: Gán UID cho mỗi request để trace dễ hơn.
-
----
-
-## 🔧 Xử lý sự cố (Troubleshooting)
-
-**1. Lỗi `403 Forbidden` từ EdgeTTS:**
-*   *Nguyên nhân:* Microsoft chặn IP hoặc thay đổi token.
-*   *Xử lý:* Hệ thống tự fallback sang Google Translate TTS. Không cần hành động, hoặc chuyển sang OpenAI TTS (chỉnh code).
-
-**2. Lỗi `Method Not Allowed` (GET /chat):**
-*   *Nguyên nhân:* Truy cập API bằng trình duyệt.
-*   *Xử lý:* Dùng Postman hoặc Client gửi request POST.
-
-**3. MongoDB Connection Timeout:**
-*   *Nguyên nhân:* Sai IP Whitelist trên Atlas.
-*   *Xử lý:* Vào Network Access trên MongoDB Atlas -> Add Current IP.
-
-**4. Bot trả lời "Sen chỉ là AI..." (Mất persona):**
-*   *Nguyên nhân:* Lỗi load file `prompts.json` hoặc biến `BOT_NAME`.
-*   *Xử lý:* Check log khởi động xem có báo lỗi load prompt không.
-
-**5. Import Error `ModuleNotFoundError`:**
-*   *Nguyên nhân:* Chưa activate venv hoặc chưa install requirements.
-*   *Xử lý:* Chạy lại `pip install -r requirements.txt`.
+- **Giám sát Hiệu suất:**
+  Kiểm tra logs xem các tag `[HERITAGE RAG]`, `[REALTIME]`, và thời gian thực thi.
 
 ---
 
-## 🤝 Contributing
-Dự án closed-source phục vụ mục đích nghiên cứu/sản phẩm riêng.
-Mọi Pull Request cần qua review của Maintainer chính.
+## 🤝 Đóng Góp (Contribution)
 
-## 📜 License
-MIT License.
+Chúng tôi hoan nghênh mọi đóng góp! Vui lòng tuân theo quy trình Pull Request chuẩn.
+1. Fork dự án
+2. Tạo Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit thay đổi (`git commit -m 'Add some AmazingFeature'`)
+4. Push lên Branch (`git push origin feature/AmazingFeature`)
+5. Tạo Pull Request
+
+## 📄 Giấy Phép (License)
+
+Được phân phối dưới giấy phép MIT License. Xem `LICENSE` để biết thêm chi tiết.

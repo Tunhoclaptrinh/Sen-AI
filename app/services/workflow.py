@@ -3,10 +3,10 @@ import logging
 import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from knowledge_base import KnowledgeBase
-from heritage_tool import HeritageTools
-from prompts import get_planner_prompt, SEN_CHARACTER_PROMPT
-from data_manager import get_default_site_key
+from app.services.knowledge import KnowledgeBase
+from app.services.tools import HeritageTools
+from app.core.config_prompts import get_planner_prompt, SEN_CHARACTER_PROMPT
+from app.core.config_loader import get_default_site_key
 # Vietnam timezone
 VN_TZ = ZoneInfo('Asia/Ho_Chi_Minh')
 
@@ -52,7 +52,7 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         if hist_str.strip(): 
             yield {"status": "processing", "step": 1, "message": "Hiểu ngữ cảnh hội thoại..."}
             try:
-                from prompts import get_contextualize_prompt
+                from app.core.config_prompts import get_contextualize_prompt
                 rw_res = await state.openai.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
@@ -69,33 +69,59 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
                 logger.error(f"❌ Rewrite error: {e}")
         
         # --- REDIS CACHE CHECK (after query rewrite) ---
-        # Cache key sử dụng query đã được rewrite để đảm bảo context chính xác
+        # ⭐ KIỂM TRA GAME CONTEXT (Level/Character/Knowledge Base)
+        # Nếu có game context → KHÔNG DÙNG CACHE để đảm bảo đúng KB + persona
+        has_game_context = False
+        level_context_name = ""
+        for entry in history:
+            if isinstance(entry, dict) and entry.get('role') == 'system':
+                content = entry.get('content', '')
+                # Check nếu có Level, Chapter, hoặc Knowledge Base trong system message
+                if any(keyword in content for keyword in ['Level:', 'Chapter:', 'KIẾN THỨC RIÊNG', '📍 CONTEXT:', '📚']):
+                    has_game_context = True
+                    logger.info("🎮 Game context detected → Cache DISABLED")
+                    
+                    # Extract specifically the Level Name if available for Planner Constraint
+                    import re
+                    # Match pattern: - Level: "tên level"
+                    match = re.search(r'- Level:\s*"(.*?)"', content)
+                    if match:
+                        level_context_name = match.group(1)
+                        logger.info(f"   → Explicit Level Context: '{level_context_name}'")
+                    break
+        
+        # Cache key sử dụng query đã được rewrite
         cache_key = f"sen:cache:{search_query}"
         cached_data = None
-        try:
-            if state.redis:
-                cached_json = await state.redis.get(cache_key)
-                if cached_json:
-                    data = json.loads(cached_json)
-                    # CHỈ DÙNG CACHE NẾU LÀ HERITAGE
-                    if data.get("intent") == "heritage":
-                        cached_data = data
-        except Exception as e:
-            logger.warning(f"Redis Check Error: {e}")
+        
+        # CHỈ DÙNG CACHE NẾU KHÔNG CÓ GAME CONTEXT
+        if not has_game_context:
+            try:
+                if state.redis:
+                    cached_json = await state.redis.get(cache_key)
+                    if cached_json:
+                        data = json.loads(cached_json)
+                        # CHỈ DÙNG CACHE NẾU LÀ HERITAGE
+                        if data.get("intent") == "heritage":
+                            cached_data = data
+            except Exception as e:
+                logger.warning(f"Redis Check Error: {e}")
 
-        if cached_data:
-            yield {"status": "processing", "step": 1.1, "message": "Đã tìm thấy câu trả lời trong bộ nhớ (Cache)..."}
-            logger.info(f"✅ Cache Hit: {cache_key}")
-            
-            # Stream giả lập từ text có sẵn
-            full_text = cached_data.get("answer", "")
-            chunk_size = 10
-            for i in range(0, len(full_text), chunk_size):
-                yield {"status": "streaming", "content": full_text[i:i+chunk_size]}
-                await asyncio.sleep(0.01)
+            if cached_data:
+                yield {"status": "processing", "step": 1.1, "message": "Đã tìm thấy câu trả lời trong bộ nhớ (Cache)..."}
+                logger.info(f"✅ Cache Hit: {cache_key}")
                 
-            yield {"status": "finished", "result": cached_data}
-            return
+                # Stream giả lập từ text có sẵn
+                full_text = cached_data.get("answer", "")
+                chunk_size = 10
+                for i in range(0, len(full_text), chunk_size):
+                    yield {"status": "streaming", "content": full_text[i:i+chunk_size]}
+                    await asyncio.sleep(0.01)
+                    
+                yield {"status": "finished", "result": cached_data}
+                return
+        else:
+            logger.info(f"⏭️  Skipping cache check (Game context present)")
 
         # [STEP 1.5] Semantic Site Retrieval (Routing using Search Query)
         yield {"status": "processing", "step": 1.5, "message": "Đang định tuyến ngữ nghĩa..."}
@@ -106,7 +132,7 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         except Exception:
             candidate_sites = []
 
-        dynamic_prompt = get_planner_prompt(candidate_sites)
+        dynamic_prompt = get_planner_prompt(candidate_sites, level_context=level_context_name)
         planner_input = f"History:\n{hist_str}\n\nOriginal Input: {norm_input}\nRewritten Input: {search_query}\n"
 
         # Gọi LLM Planner
@@ -137,8 +163,42 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         # --- CASE A: OUT OF SCOPE ---
 
         if intent == "out_of_scope":
-            response_msg = "Dạ, Sen chỉ được đào tạo về Di sản, Văn hóa và Lịch sử Việt Nam thôi ạ. Bác vui lòng hỏi chủ đề liên quan để Sen phục vụ nhé! 🇻🇳"
-            # Stream response này giả lập
+            # [IMPROVED] Dùng LLM để từ chối khéo léo theo Persona thay vì hardcode
+            yield {"status": "processing", "step": 3.1, "message": "Sen đang suy nghĩ câu trả lời..."}
+            
+            # Lấy danh sách các site ĐANG CÓ trong hệ thống để bot tự tin giới thiệu
+            from app.core.config_loader import get_heritage_config
+            known_sites = get_heritage_config()
+            known_sites_names = [s['name'] for s in known_sites.values()]
+            known_list_str = ", ".join(known_sites_names)
+
+            refusal_prompt = f"""{SEN_CHARACTER_PROMPT}
+            
+            NGƯỜI DÙNG VỪA HỎI VỀ: "{u_input}"
+            
+            SỰ THẬT LÀ:
+            1. Bạn KHÔNG có dữ liệu về địa điểm/chủ đề này trong sổ tay.
+            2. Bạn HIỆN TẠI CHỈ CÓ DỮ LIỆU VỀ: {known_list_str}.
+            
+            NHIỆM VỤ CỦA BẠN:
+            - Nhắc lại tên địa điểm người dùng vừa hỏi (để xác nhận là bạn hiểu đúng ý).
+            - Xin lỗi khéo léo rằng hiện tại trong sổ tay của Sen chưa kịp cập nhật thông tin về nơi đó.
+            - TUYỆT ĐỐI KHÔNG được bịa ra các chủ đề liên quan (như món ăn, lễ hội vùng đó) để gợi ý.
+            - CHỈ ĐƯỢC MỜI người dùng tham quan các địa điểm bạn ĐANG BIẾT ({known_list_str}).
+            - Giữ thái độ cầu thị, hứa sẽ học thêm trong tương lai.
+            """
+            
+            try:
+                res = await state.openai.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role": "system", "content": refusal_prompt}],
+                    temperature=0.7
+                )
+                response_msg = res.choices[0].message.content
+            except Exception as e:
+                logger.error(f"Out of scope generation error: {e}")
+                response_msg = "Dạ, Sen chỉ được đào tạo về Di sản, Văn hóa và Lịch sử Việt Nam thôi ạ. Bác vui lòng hỏi chủ đề liên quan để Sen phục vụ nhé! 🇻🇳"
+
             yield {"status": "streaming", "content": response_msg}
             final_res = await _build_response_data(state, response_msg, intent, site_key, "none")
             yield {"status": "finished", "result": final_res}
@@ -148,15 +208,84 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         if intent == "chitchat":
             # Inject Current Time
             current_time = datetime.now(VN_TZ).strftime("%H:%M ngày %d/%m/%Y")
+            
+            # [FIX] Level Context Constraint for Chitchat Refusal
+            level_refusal_prompt = ""
+            if level_context_name:
+                level_refusal_prompt = f"""
+[GAMEPLAY MODE]: Người dùng đang chơi màn: "{level_context_name}".
+[CHỈ DẪN QUAN TRỌNG]: 
+- Nếu câu hỏi của người dùng là về một DI TÍCH/SỰ KIỆN KHÁC (không phải {level_context_name}), bạn hãy KHÉO LÉO TỪ CHỐI cung cấp thông tin chi tiết. 
+- Hãy gợi ý quay lại chủ đề của màn chơi hiện tại.
+- Mẫu câu: "Dạ, cậu ơi, mình đang ở {level_context_name} mà? Cứ tập trung vào đây đã nhé, chuyện đó để lúc khác Sen kể cho!"
+- Nếu là chào hỏi xã giao (hi, hello) -> Trả lời bình thường.
+"""
+
+            # [FIX] Inject Candidate Sites into Chitchat Context for smarter clarification
+            # Nếu Planner đẩy về Chitchat vì câu hỏi ngắn (vd: "lá cờ"), nhưng thực tế KnowledgeBase lại tìm thấy "Hoàng Thành"
+            # thì Bot nên dùng thông tin đó để gợi ý ngược lại User.
+            candidate_names = []
+            if candidate_sites:
+                candidate_names = [site['name'] for site in candidate_sites]
+            
+            site_hint_msg = ""
+            if candidate_names:
+                site_hint_msg = f"\n[GỢI Ý TỪ HỆ THỐNG]: Từ khóa trong câu hỏi có thể liên quan đến: {', '.join(candidate_names)}. Hãy dùng thông tin này để hỏi lại người dùng (Ví dụ: 'Ý cậu là Cột Cờ ở Hoàng Thành phải không?')."
+
+            # [FIX] Inject Explicit Known Sites for Recommendation to prevent Hallucination
+            from app.core.config_loader import get_heritage_config
+            all_known = get_heritage_config()
+            # Format list: "Tên (Mô tả ngắn)"
+            valid_recommendations = []
+            for k, v in all_known.items():
+                valid_recommendations.append(f"- {v['name']}")
+            
+            valid_recs_str = "\n".join(valid_recommendations)
+
             system_msg = f"""{SEN_CHARACTER_PROMPT}
 
 [THÔNG TIN THỜI GIAN THỰC]: Hiện tại là {current_time}.
-[QUY TẮC FORMAT]: Nếu có Link/URL, BẮT BUỘC định dạng Markdown: [Tên Link](URL). Không để URL trần.
-[QUY TẮC GỢI Ý]: Khi người dùng nhờ giới thiệu/gợi ý địa điểm đi chơi, HÃY CHỈ tập trung vào các DI SẢN VĂN HÓA, LỊCH SỬ, hoặc DANH LAM THẮNG CẢNH VIỆT NAM. Tránh gợi ý các khu vui chơi giải trí thuần túy trừ khi được hỏi."""
+{level_refusal_prompt}
+{site_hint_msg}
+
+[DANH SÁCH ĐỊA ĐIỂM BẠN CÓ DỮ LIỆU]:
+{valid_recs_str}
+
+[QUY TẮC SỐNG CÒN - CHẶN CHỦ ĐỀ LẠ]:
+1. KIỂM TRA CHỦ ĐỀ CÂU NÓI:
+   - Nếu người dùng KHEN/CHÊ/HỎI về món ăn, địa điểm, sự vật KHÔNG NẰM TRONG DANH SÁCH: {valid_recs_str.replace(chr(10), ", ")}.
+   - HÀNH ĐỘNG: TUYỆT ĐỐI KHÔNG ĐƯỢC HƯỞNG ỨNG hay bình luận sâu (Dù là đồng tình "ngon lắm", "đẹp lắm").
+   - PHẢI lái ngay về chủ đề Sen biết.
+   - Ví dụ SAI: "Bánh Pía ngon lắm! Vỏ giòn tan..." (SAI vì Bánh Pía không có trong DB).
+   - Ví dụ ĐÚNG: "Dạ nghe tả bánh Pía hấp dẫn quá, nhưng tiếc là Sen chưa được học kỹ về ẩm thực vùng này. Hay là mình quay về bàn chuyện Múa Rối Nước đi ạ? Cũng thú vị lắm đó!"
+
+2. TUYỆT ĐỐI KHÔNG DÙNG KIẾN THỨC GPT-4 (PRE-TRAINED KNOWLEDGE) để mô tả những thứ ngoài Database.
+   - Nếu bạn không có dữ liệu về "Bánh Pía" trong monuments.json -> Coi như bạn KHÔNG BIẾT nó là gì.
+
+3. KHI NGƯỜI DÙNG NHỜ GỢI Ý/RECOMMEND:
+   - CHỈ ĐƯỢC GỢI Ý các địa điểm trong danh sách ở trên.
+   
+4. KHÔNG "DẠY ĐỜI" TRONG CHITCHAT:
+   - Tuyệt đối KHÔNG đưa ra các thông tin lịch sử cụ thể.
+   - Thay vào đó: Hãy giới thiệu cảm xúc, không gian, vẻ đẹp.
+
+[QUY TẮC FORMAT]: Nếu có Link/URL, BẮT BUỘC định dạng Markdown: [Tên Link](URL). Không để URL trần."""
             
+            # [FIX] Cần truyền toàn bộ HISTORY để LLM nhìn thấy System Prompt (có chứa Knowledge Base từ AI Service)
+            # Lọc history để chỉ lấy đúng format OpenAI support (role, content)
+            chat_messages = [{"role": "system", "content": system_msg}]
+            
+            for entry in history:
+                if isinstance(entry, dict) and 'role' in entry and 'content' in entry:
+                    chat_messages.append({"role": entry['role'], "content": entry['content']})
+            
+            # Append cú chót là user input hiện tại (nếu chưa có trong history)
+            if not chat_messages or chat_messages[-1]['role'] != 'user' or chat_messages[-1]['content'] != u_input:
+                 chat_messages.append({"role": "user", "content": u_input})
+
             res = await state.openai.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[{"role": "system", "content": system_msg}, {"role": "user", "content": u_input}],
+                messages=chat_messages,
                 stream=True
             )
             full_ans = ""
@@ -174,13 +303,14 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
 
         # --- MAIN FLOW: HERITAGE & REALTIME ---
         # 1. Static Info
-        from data_manager import get_site_config
+        from app.core.config_loader import get_site_config
         static_info = ""
         if site_key:
             site_config = get_site_config(site_key)
             if site_config:
                 static_info = f"THÔNG TIN DI TÍCH ({site_config.get('name')}):\n Địa chỉ: {site_config.get('address')}\nGiờ mở cửa: {site_config.get('open_hour')}h-{site_config.get('close_hour')}h"
         
+        # 2. Dynamic Info / RAG
         # 2. Dynamic Info / RAG
         if intent == "realtime":
             if not site_key: 
@@ -190,6 +320,16 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
                 return
             
             yield {"status": "processing", "step": 4, "message": f"Kết nối dữ liệu thực tế tại {site_key}..."}
+            
+            # [LOGIC UPDATE] Realtime cũng phải RAG để lấy bối cảnh di tích (tránh bịa đặt thông tin gốc)
+            logger.info(f"🔍 [REALTIME + RAG] Fetching base knowledge for {site_key}...")
+            rag_content = await state.brain.fetch_and_rerank(
+                query=search_query, 
+                site_key=site_key,
+                history=history
+            )
+            rag_context_str = f"\n\nTHÔNG TIN LỊCH SỬ/VĂN HÓA:\n{rag_content}" if rag_content else ""
+
             try:
                 # Gọi song song các tool
                 tasks = [
@@ -210,16 +350,16 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
                 
                 if not valid_results:
                     # Nếu tất cả tools đều fail
-                    realtime_data = "Hiện tại Sen chưa kết nối được với các nguồn dữ liệu thời gian thực. Xin lỗi bác!"
+                    realtime_data = "Hiện tại Sen chưa kết nối được với các nguồn dữ liệu thời gian thực."
                 else:
                     realtime_data = "\n\n".join(valid_results)
                 
-                final_context = f"{static_info}\n\n{'='*50}\nDỮ LIỆU THỜI GIAN THỰC:\n{'='*50}\n{realtime_data}"
-                source_type = "tools"
+                final_context = f"{static_info}{rag_context_str}\n\n{'='*50}\nDỮ LIỆU THỜI GIAN THỰC:\n{'='*50}\n{realtime_data}"
+                source_type = "tools+rag"
             except Exception as e:
                 logger.error(f"Realtime Tool Error: {e}", exc_info=True)
-                final_context = static_info + "\n\n(Lỗi kết nối công cụ thời gian thực)"
-                source_type = "tools_error"
+                final_context = f"{static_info}{rag_context_str}\n\n(Lỗi kết nối công cụ thời gian thực)"
+                source_type = "rag_only_fallback"
 
         elif intent == "heritage": # RAG
             yield {"status": "processing", "step": 4, "message": "Tra cứu sử liệu..."}
@@ -257,10 +397,27 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
             
             # Tái tạo tin nhắn context (Memory Injection)
             current_time = datetime.now(VN_TZ).strftime("%H:%M ngày %d/%m/%Y")
+            
+            # [IMPROVED] FALLBACK MECHANISM FOR GENERAL KNOWLEDGE
+            # Nếu RAG Context (final_context) quá ngắn hoặc rỗng, nhưng câu hỏi lại về kiến thức phổ thông (VD: "ý nghĩa sao vàng 5 cánh"),
+            # cho phép LLM "chém" dựa trên kiến thức chung nhưng phải đánh dấu là kiến thức bổ trợ.
+            
+            allow_general_knowledge_instruction = ""
+            if intent == "heritage" and (not final_context or len(final_context) < 50): # Check final_context, not rag_content directly
+                 allow_general_knowledge_instruction = """
+[CHẾ ĐỘ KIẾN THỨC BỔ TRỢ]:
+Hiện tại tài liệu (Context) không có đủ thông tin cho câu hỏi này.
+TUY NHIÊN, đây là một câu hỏi về kiến thức phổ thông/biểu tượng văn hóa (Ví dụ: Ý nghĩa sao vàng, Chú Tễu là ai...).
+HÃY TRẢ LỜI dựa trên kiến thức chung của bạn, NHƯNG phải bắt đầu bằng cụm từ:
+"Theo hiểu biết chung của Sen thì..." hoặc "Tuy trong sổ tay di tích không ghi rõ, nhưng theo Sen biết..."
+TUYỆT ĐỐI KHÔNG BỊA ĐẶT các thông tin cụ thể như ngày tháng, số liệu nếu không chắc chắn.
+"""
+
             system_prompt = f"""{SEN_CHARACTER_PROMPT}
 
 [THÔNG TIN THỜI GIAN THỰC]: Hiện tại là {current_time}.
 [QUY TẮC FORMAT]: Nếu có Link/URL, BẮT BUỘC định dạng Markdown: [Tên Link](URL). Không để URL trần.
+{allow_general_knowledge_instruction}
 [QUY TẮC GỢI Ý]: Khi người dùng nhờ giới thiệu/gợi ý địa điểm đi chơi, HÃY CHỈ tập trung vào các DI SẢN VĂN HÓA, LỊCH SỬ, hoặc DANH LAM THẮNG CẢNH VIỆT NAM (Ví dụ: Hoàng Thành, Văn Miếu, Chùa Một Cột, Nhà Tù Hỏa Lò...). Tránh gợi ý các khu vui chơi giải trí thuần túy trừ khi được hỏi."""
             msgs = [{"role": "system", "content": system_prompt}]
             
@@ -294,7 +451,7 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         debug_filter = "N/A"
         
         if intent == "heritage" and site_key:
-            from data_manager import get_site_config
+            from app.core.config_loader import get_site_config
             sc = get_site_config(site_key)
             if sc:
                  debug_col = sc.get("collection", "culture")
@@ -307,7 +464,7 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         if use_verifier and intent == "heritage" and 'final_context' in locals():
              yield {"status": "processing", "step": 5.5, "message": "🕵️ Đang kiểm chứng thông tin..."}
              try:
-                 from verifier import Verifier
+                 from app.services.verifier import Verifier
                  # Init Verifier (đảm bảo imports không lỗi)
                  verifier = Verifier(state.openai)
                  
@@ -339,7 +496,7 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         # [EMOTION ANALYSIS] 🎭 Phân tích biểu cảm
         emotion_data = {}
         try:
-            from emotion_analyzer import EmotionAnalyzer
+            from app.services.emotion import EmotionAnalyzer
             emotion_data = EmotionAnalyzer.analyze(u_input, full_answer, intent)
             logger.info(f"🎭 Emotion selected: {emotion_data}")
         except Exception as e:
@@ -352,14 +509,16 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
         final_res["emotion"] = emotion_data  # ✨ Thêm emotion metadata
         
         # --- REDIS SET (SAVE CACHE) ---
-        # CHỈ LƯU NẾU LÀ HERITAGE
-        if intent == "heritage" and state.redis:
+        # CHỈ LƯU NẾU LÀ HERITAGE VÀ KHÔNG CÓ GAME CONTEXT
+        if intent == "heritage" and state.redis and not has_game_context:
             try:
                  # Lưu cache 1 tiếng (3600s)
                  await state.redis.setex(cache_key, 3600, json.dumps(final_res, ensure_ascii=False))
                  logger.info(f"💾 Caching HERITAGE response: {cache_key}")
             except Exception as e:
                  logger.warning(f"Redis Set Error: {e}")
+        elif has_game_context:
+            logger.info(f"⏭️  Skipping cache save (Game context present)")
 
         yield {"status": "finished", "result": final_res}
 

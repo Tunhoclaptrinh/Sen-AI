@@ -2,7 +2,7 @@ import httpx
 
 import re
 from datetime import datetime, timezone, timedelta
-from data_manager import get_site_config, get_data_source_info
+from app.core.config_loader import get_site_config, get_data_source_info
 import logging
 
 logger = logging.getLogger("uvicorn")

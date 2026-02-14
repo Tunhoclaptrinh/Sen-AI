@@ -16,17 +16,26 @@
         "open_hour": 8,
         "close_hour": 17,
         "description": "Quần thể di tích gắn với lịch sử kinh thành Thăng Long - Hà Nội.",
-        "context_description": "Hoàng thành, thăng long, lịch sử, triều đại, khảo cổ, điện kính thiên, đoan môn, hậu lâu, bắc môn, cột cờ hà nội, di sản unesco, kinh đô, rồng đá, thành cổ",
-        "is_default": true
+        "is_default": true,
+        "context_description": "Hoàng thành, thăng long, lịch sử, triều đại, khảo cổ, điện kính thiên, đoan môn, hậu lâu, bắc môn, cột cờ hà nội, lá cờ, kỳ đài, di sản unesco, kinh đô, rồng đá, thành cổ"
     },
     {
         "key": "mua_roi_nuoc",
-        "name": "Múa Rối Nước",
+        "name": "Múa Rối Nước - Nhà hát Múa rối Thăng Long",
         "collection": "culture",
         "filter": {
             "culture_type": "mua_roi_nuoc"
         },
+        "address": "57B Đinh Tiên Hoàng, Hoàn Kiếm, Hà Nội",
+        "coords": {
+            "lat": 21.0339,
+            "lon": 105.8505
+        },
+        "home_url": "https://thanglongwaterpuppet.org",
+        "ticket_url": "https://thanglongwaterpuppet.org/vi/lich-dien-gia-ve",
+        "open_hour": 8,
+        "close_hour": 21,
         "description": "Nghệ thuật sân khấu dân gian truyền thống độc đáo của Việt Nam.",
-        "context_description": "Múa rối, rối nước, nghệ thuật dân gian, văn hóa lúa nước, chú tễu, nhà hát múa rối thăng long, water puppet, sân khấu nước, hồ hoàn kiếm, nhạc cụ dân tộc"
+        "context_description": "múa rối nước, nghệ thuật dân gian, văn hóa lúa nước, chú Tễu, nhà hát múa rối Thăng Long, sân khấu nước, nhạc cụ dân tộc"
     }
 ]

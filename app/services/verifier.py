@@ -1,6 +1,6 @@
 import logging
 import os
-from prompts import VERIFIER_SYSTEM_PROMPT
+from app.core.config_prompts import VERIFIER_SYSTEM_PROMPT
 
 logger = logging.getLogger("uvicorn")
 

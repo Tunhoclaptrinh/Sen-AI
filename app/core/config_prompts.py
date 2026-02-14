@@ -1,7 +1,7 @@
 import json
 import os
 import logging
-from data_manager import get_heritage_config
+from app.core.config_loader import get_heritage_config
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,7 +9,8 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # File cấu hình Prompts
-PROMPT_FILE = os.path.join(os.path.dirname(__file__), "data", "prompts.json")
+# File cấu hình Prompts
+PROMPT_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "prompts.json")
 
 def load_prompts():
     """Load prompts from JSON file."""
@@ -43,13 +44,16 @@ def get_sen_persona():
     raw = _PROMPTS.get("sen_persona", "Bạn là {bot_name} - trợ lý ảo AI.")
     return raw.replace("{bot_name}", get_bot_name())
 
-def get_planner_prompt(candidate_sites, hint_str=""):
+def get_planner_prompt(candidate_sites, hint_str="", level_context=""):
     """
     Construct dynamic planner prompt using stored template via Dynamic In-Context Learning.
     candidate_sites: List of site dicts (filtered by semantic search).
     hint_str: Optional hints.
     """
     global _PROMPTS
+    # [HOTFIX] Reload prompts every time to ensure JSON updates apply immediately
+    _PROMPTS = load_prompts()
+    
     base_prompt = _PROMPTS.get("planner_prompt", "")
     
     # Inject Bot Name
@@ -68,19 +72,34 @@ def get_planner_prompt(candidate_sites, hint_str=""):
     site_info_str = "\n".join([f"- {v['key']}: {v['name']}\n  Mô tả: {v.get('context_description', '')}" for v in candidate_sites])
     site_keys = [v['key'] for v in candidate_sites]
 
+    # Level Constraint Block
+    level_constraint_block = ""
+    if level_context:
+        level_constraint_block = f"""
+🛑 GAMEPLAY CONSTRAINT (Level: "{level_context}"):
+- Người dùng đang chơi màn: "{level_context}".
+- BẠN BẮT BUỘC PHẢI KIỂM TRA DANH SÁCH DI TÍCH Ở TRÊN VỚI LEVEL NÀY.
+- Các di tích trong danh sách "Candidates" chỉ là kết quả tìm kiếm thô.
+- NẾU di tích không thuộc bối cảnh/thời kỳ của Level "{level_context}", HÃY BỎ QUA NÓ (Dù tên có vẻ giống câu hỏi).
+- Ví dụ: Đang chơi "Huyền thoại Rồng Tiên" (Thời Hùng Vương) mà danh sách có "Hoàng Thành Thăng Long" (Thời Lý) -> KHÔNG ĐƯỢC CHỌN (Trả về Intent: chitchat để từ chối khéo).
+- CHỈ chọn Site nếu nó LIÊN QUAN TRỰC TIẾP đến nội dung màn chơi.
+"""
+
     # Inject dynamic data
     dynamic_part = f"""
-DANH SÁCH DI TÍCH HỢP LỆ (Context):
+DANH SÁCH DI TÍCH TÌM THẤY TỪ DATABASE (Cần kiểm duyệt):
 {site_info_str}
 
 DANH SÁCH KEY: {site_keys} hoặc null.
 
-⭐ SỬ DỤNG SITE HINT:
+⭐ THÔNG TIN BỔ SUNG:
 {hint_str}
 
+{level_constraint_block}
+
 ⚠️ QUY TẮC ĐẶC BIỆT:
-- Nếu người dùng hỏi gợi ý địa điểm, hỏi chung chung (VD: "đi đâu chơi", "giới thiệu chỗ khác", "khám phá gì", "còn chỗ nào không") -> Intent: "chitchat" (để AI tự gợi ý) hoặc "heritage" (site: null).
-- KHÔNG trả về "out_of_scope" nếu câu hỏi liên quan đến du lịch/tham quan/lịch sử, kể cả khi không khớp site key nào.
+- Nếu người dùng hỏi gợi ý địa điểm, hỏi chung chung -> Intent: "chitchat" (để AI tự gợi ý).
+- Ưu tiên "chitchat" nếu câu hỏi không khớp với bất kỳ di tích nào trong danh sách SAU KHI ĐÃ LỌC theo Level.
 """
     
     return base_prompt + "\n" + dynamic_part

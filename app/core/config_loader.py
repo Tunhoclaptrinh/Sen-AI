@@ -11,7 +11,8 @@ from typing import Dict, Any, List
 logger = logging.getLogger("uvicorn")
 
 # Đường dẫn mác định tới file data
-DATA_FILE_PATH = os.path.join(os.path.dirname(__file__), "data", "monuments.json")
+# Đường dẫn mác định tới file data
+DATA_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "monuments.json")
 
 def load_heritage_data() -> Dict[str, Any]:
     """

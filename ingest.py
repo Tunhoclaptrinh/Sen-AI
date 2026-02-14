@@ -11,8 +11,8 @@ from sentence_transformers import SentenceTransformer
 # LangChain Splitters & Loaders (Imports moved inside functions for safety)
 
 # Module Database & Config
-from vector_db import VectorDatabase
-from data_manager import get_heritage_config
+from app.core.vector_db import VectorDatabase
+from app.core.config_loader import get_heritage_config
 
 # --- 1. CẤU HÌNH ---
 load_dotenv()
@@ -20,11 +20,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DB_NAME = "vector_db"
-COLLECTION_NAME = "hesitage"
+COLLECTION_NAME = "heritage"
 # Model 384 chiều tối ưu cho tiếng Việt/đa ngữ
 local_embedder = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 
-SOURCE_DIR = os.path.join(os.path.dirname(__file__), "data", "documents")
+# Cấu hình đường dẫn tài liệu: Ưu tiên biến môi trường (Docker/Prod), Fallback về local
+SOURCE_DIR = os.getenv("DOCUMENTS_SRC_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "documents"))
 
 # --- 2. HELPERS: LOADERS & SMART CHUNKERS ---
 
@@ -193,7 +194,8 @@ async def ingest():
     # 2. Quét thư mục data/documents (Nếu chưa có thì tạo)
     if not os.path.exists(SOURCE_DIR):
         os.makedirs(SOURCE_DIR)
-        logger.info(f"📂 Đã tạo thư mục '{SOURCE_DIR}'. Hãy bỏ file .md/.pdf/.docx vào đây (đặt tên trùng site_key, vd: hoang_thanh.pdf).")
+        logger.info(f"📂 [System Init] Đã tạo thư mục nguồn dữ liệu: '{os.path.abspath(SOURCE_DIR)}'")
+        logger.info("   👉 (Mount Volume hoặc Copy file vào đây để Ingest hoạt động)")
         
     # Lấy danh sách file trong thư mục
     files = os.listdir(SOURCE_DIR)
@@ -210,7 +212,7 @@ async def ingest():
         matched_culture_type = "di_tich"
         
         for key in config.keys():
-            if key in filename:  # Logic linh hoạt: Chỉ cần tên file CHỨA key là được
+            if key.lower() in filename.lower():  # Logic linh hoạt: Chỉ cần tên file CHỨA key là được (case-insensitive)
                 matched_key = key
                 matched_culture_type = config[key].get("culture_type", "di_tich")
                 break
@@ -303,31 +305,83 @@ async def ingest():
         dynamic_type_field = type_field_map.get(target_col, "culture_type")
 
         # Kiểm tra xem site này đã có data từ file document chưa
+        # [FIX] Check chính xác collection
         doc_count = v_db.count_documents(target_col, {"metadata.site_key": key, "metadata.file_type": {"$in": [".pdf", ".md", ".docx"]}})
         
         if doc_count > 0:
             continue # Ưu tiên file document chi tiết hơn description ngắn
             
-        # Check description existing
-        desc_count = v_db.count_documents(target_col, {"metadata.site_key": key, "metadata.source": "monuments.json"})
-        if desc_count > 0: continue
+        # NẾU CHƯA CÓ DATA -> TỰ TẠO DUMMY DATA TỪ MONUMENTS.JSON + TEMPLATE
+        # Điều này đảm bảo luôn có ít nhất một chút thông tin để không bị lỗi 0 results
+        logger.info(f"⚠️ Chưa có file tài liệu cho '{data['name']}'. Đang tạo dữ liệu mẫu...")
         
-        desc = data.get("context_description", "")
-        if desc:
-            logger.info(f"📝 Nạp mô tả ngắn cho '{data['name']}' vào '{target_col}'...")
-            # Embed description
-            full_text = f"{data['name']}.\n{desc}"
-            vec = local_embedder.encode([full_text]).tolist()[0]
-            
-            v_db.insert_many(target_col, [{
-                "content": desc,
-                "embedding": vec,
-                dynamic_type_field: key,
-                "metadata": {"site_key": key, "source": "monuments.json", "level": 0}
-            }])
-            total_chunks += 1
+        # Tạo nội dung mẫu phong phú hơn chỉ là description
+        home_url = data.get("home_url", "")
+        ticket_url = data.get("ticket_url", "")
+        addr = data.get("address", "")
+        desc = data.get("description", "")
+        context = data.get("context_description", "")
+        
+        dummy_content = f"""
+# {data['name']}
+
+## Giới thiệu chung
+{desc}
+Địa chỉ: {addr}
+
+## Thông tin bổ sung
+{context}
+
+## Liên hệ
+Website: {home_url}
+Vé tham quan: {ticket_url}
+
+(Dữ liệu này được tạo tự động từ cấu hình hệ thống vì chưa có tài liệu chi tiết).
+        """
+        
+        # Embed description
+        vec = local_embedder.encode([dummy_content]).tolist()[0]
+        
+        v_db.insert_many(target_col, [{
+            "content": dummy_content,
+            "embedding": vec,
+            dynamic_type_field: key,
+            "metadata": {"site_key": key, "source": "auto_generated", "level": 0}
+        }])
+        total_chunks += 1
+        logger.info(f"✅ Đã tạo dữ liệu mẫu cho '{data['name']}' vào '{target_col}'.")
 
     logger.info(f"✨ Hoàn tất! Tổng cộng thêm {total_chunks} chunks mới.")
+    
+    # --- IN RA HƯỚNG DẪN TẠO INDEX (User-Friendly) ---
+    print("\n" + "="*60)
+    print("⚠️  LƯU Ý QUAN TRỌNG VỀ MONGODB ATLAS SEARCH INDEX  ⚠️")
+    print("="*60)
+    print("Để tìm kiếm hoạt động chính xác với Filter, bạn CẦN tạo Search Index trên Atlas.")
+    print("Hãy vào Atlas -> Database -> Chọn Collection 'heritage' -> Tab 'Search Indexes' -> Create Search Index.")
+    print("Chọn 'JSON Editor' và dán cấu hình sau:")
+    print("-" * 20)
+    print("""
+{
+  "name": "vector_index",
+  "type": "vectorSearch",
+  "fields": [
+    {
+      "type": "vector",
+      "path": "embedding",
+      "numDimensions": 384,
+      "similarity": "cosine"
+    },
+    {
+      "type": "filter",
+      "path": "heritage_type"
+    }
+  ]
+}
+    """)
+    print("-" * 20)
+    print("Nếu chưa có Index này, các query có filter sẽ trả về 0 kết quả!")
+    print("="*60 + "\n")
 
 async def ingest_file(file_path: str, site_key: str):
     """

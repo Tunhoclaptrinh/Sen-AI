@@ -3,7 +3,7 @@ import logging
 from sentence_transformers import CrossEncoder
 from typing import List, Optional, Tuple
 from sentence_transformers import SentenceTransformer
-from data_manager import get_heritage_config
+from app.core.config_loader import get_heritage_config
 
 logger = logging.getLogger("uvicorn")
 
@@ -28,7 +28,7 @@ class KnowledgeBase:
         """
         Reload lại cấu hình từ khóa từ data_manager.
         """
-        from data_manager import get_heritage_config
+        from app.core.config_loader import get_heritage_config
         config = get_heritage_config()
         self.site_keywords = {}
         for key, data in config.items():
@@ -50,7 +50,7 @@ class KnowledgeBase:
         Đọc config, embed descriptions và lưu vào RAM.
         """
         try:
-            from data_manager import get_heritage_config
+            from app.core.config_loader import get_heritage_config
             config = get_heritage_config()
             
             texts = []
@@ -136,7 +136,7 @@ class KnowledgeBase:
         - Rerank: Cross-Encoder + Keyword Boost
         """
         # Load config for site to get collection and filter
-        from data_manager import get_site_config
+        from app.core.config_loader import get_site_config
         site_config = get_site_config(site_key)
         
         if not site_config:
@@ -189,7 +189,39 @@ class KnowledgeBase:
             filter_dict=filter_dict
         )
         
-        logger.info(f"   ✅ Retrieved {len(candidates)} candidates từ '{collection_name}'")
+        logger.info(f"   ✅ Retrieved {len(candidates)} candidates từ '{collection_name}' (Filter Strict)")
+
+        # [NEW] PHASE 1.5: Fallback Unfiltered Search on SAME Collection
+        # Nếu filter trả về 0 (có thể do lỗi Index chưa config filter field), thử tìm không filter
+        if len(candidates) == 0 and site_key:
+             logger.warning(f"⚠️ Filter Search trả về 0. Thử tìm KHÔNG filter trên '{collection_name}' (Check lỗi Index Atlas)...")
+             unfiltered_candidates = await self.query(
+                collection_name=collection_name,
+                query_vector=q_vec,
+                limit=10,
+                filter_dict={} # Remove filter
+             )
+             # Post-filter bằng Python (nếu collection hỗn tạp)
+             # Tuy nhiên nếu collection chuyên biệt (heritage chỉ có heritage) thì oke.
+             # Nếu collection chung chung, ta cần check metadata.
+             filtered_in_memory = []
+             for c in unfiltered_candidates:
+                 # Check 'heritage_type' or 'culture_type' field matches site_key
+                 # Hoặc check metadata.site_key
+                 c_site = c.get('metadata', {}).get('site_key')
+                 # Dynamic field check
+                 dyna_key = None
+                 if 'heritage_type' in c: dyna_key = c['heritage_type']
+                 elif 'culture_type' in c: dyna_key = c['culture_type']
+                 
+                 if c_site == site_key or dyna_key == site_key:
+                     filtered_in_memory.append(c)
+             
+             if filtered_in_memory:
+                 logger.info(f"   ✅ Tìm thấy {len(filtered_in_memory)} chunks khi bỏ Index Filter (Lỗi cấu hình Atlas!)")
+                 candidates.extend(filtered_in_memory)
+             else:
+                 logger.info(f"   ❌ Vẫn không tìm thấy gì trên '{collection_name}' kể cả khi bỏ filter.")
 
         # PHASE 2: Global Fallback (Nếu tìm trong site không thấy, tìm toàn bộ kho)
         # Nếu filter filters quá chặt làm mất data (ví dụ Cột Cờ nằm file riêng nhưng user hỏi Hoàng Thành)

@@ -3,12 +3,12 @@ __pycache__
 *.pyo
 *.pyd
 .Python
-env
-.venv
-venv
+env/
+venv/
+.venv/
 pip-log.txt
 pip-delete-this-directory.txt
-.tox
+.tox/
 .coverage
 .coverage.*
 .cache
@@ -19,10 +19,7 @@ coverage.xml
 .git
 .gitignore
 .dockerignore
-.idea
-.vscode
+Docker/
 Dockerfile
-chat_logs.json
-vector_db/
-tmp/
-Agentic-RAG - Copy/
+docker-compose.yml
+README.md

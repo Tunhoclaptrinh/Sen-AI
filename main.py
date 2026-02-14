@@ -8,13 +8,13 @@ import redis.asyncio as redis
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from sentence_transformers import SentenceTransformer
-from vector_db import VectorDatabase
-from knowledge_base import KnowledgeBase
-from heritage_tool import HeritageTools
+from app.core.vector_db import VectorDatabase
+from app.services.knowledge import KnowledgeBase
+from app.services.tools import HeritageTools
 import logging
 import os
 import asyncio
-from agentic_rag_workflow import agentic_workflow
+from app.services.workflow import agentic_workflow, agentic_workflow_stream
 import io
 from uuid import uuid4
 import edge_tts
@@ -120,7 +120,7 @@ async def startup():
     app.state.brain = KnowledgeBase(v_db, embedder)
     
     # Khởi tạo Verifier module
-    from verifier import Verifier
+    from app.services.verifier import Verifier
     app.state.verifier = Verifier(app.state.openai)
     
     # Khởi tạo HeritageTools để lấy thông tin thời gian thực
@@ -238,7 +238,7 @@ async def chat_stream_api(request: ChatRequest):
 
     async def event_generator():
         try:
-            from agentic_rag_workflow import agentic_workflow_stream
+            from app.services.workflow import agentic_workflow_stream
             
             # [Step 1] Initial Log
             yield json.dumps({"status": "start", "message": "Bắt đầu xử lý..."}) + "\n"
@@ -463,7 +463,7 @@ async def data_source_info():
     Endpoint kiểm tra nguồn dữ liệu hiện tại đang sử dụng.
     Trả về thông tin về dữ liệu cào (scraped) hay default (hardcoded).
     """
-    from data_manager import get_data_source_info
+    from app.core.config_loader import get_data_source_info
     info = get_data_source_info()
     return {
         "data_source": info,
@@ -597,7 +597,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 logger.error(f"WS Redis Load Error: {e}")
 
         # Processing
-        from agentic_rag_workflow import agentic_workflow_stream
+        from app.services.workflow import agentic_workflow_stream
         import json
         
         buffer = ""
