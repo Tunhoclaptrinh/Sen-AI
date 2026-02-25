@@ -36,13 +36,16 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
                 if 'role' in entry and 'content' in entry:
                     role = entry.get('role', '').capitalize()
                     content = entry.get('content', '')
+                    # Truncate AI response — rewrite chỉ cần biết ngữ cảnh, không cần full text
+                    if role.lower() == 'assistant':
+                        content = content[:200] + ('...' if len(content) > 200 else '')
                     hist_str += f"{role}: {content}\n"
                 else:
                     # Support internal format {user_input, generated_answer}
                     q = entry.get('user_input', '')
-                    a = entry.get('generated_answer', '')[:100]
+                    a = entry.get('generated_answer', '')[:200]
                     if q: hist_str += f"User: {q}\n"
-                    if a: hist_str += f"AI: {a}\n"
+                    if a: hist_str += f"AI: {a}...\n"
             elif isinstance(entry, str):
                 role = "User" if i % 2 == 0 else "AI"
                 hist_str += f"{role}: {entry[:200]}\n"
@@ -90,38 +93,19 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
                         logger.info(f"   → Explicit Level Context: '{level_context_name}'")
                     break
         
-        # Cache key sử dụng query đã được rewrite
-        cache_key = f"sen:cache:{search_query}"
-        cached_data = None
-        
-        # CHỈ DÙNG CACHE NẾU KHÔNG CÓ GAME CONTEXT
-        if not has_game_context:
-            try:
-                if state.redis:
-                    cached_json = await state.redis.get(cache_key)
-                    if cached_json:
-                        data = json.loads(cached_json)
-                        # CHỈ DÙNG CACHE NẾU LÀ HERITAGE
-                        if data.get("intent") == "heritage":
-                            cached_data = data
-            except Exception as e:
-                logger.warning(f"Redis Check Error: {e}")
-
-            if cached_data:
-                yield {"status": "processing", "step": 1.1, "message": "Đã tìm thấy câu trả lời trong bộ nhớ (Cache)..."}
-                logger.info(f"✅ Cache Hit: {cache_key}")
-                
-                # Stream giả lập từ text có sẵn
-                full_text = cached_data.get("answer", "")
-                chunk_size = 10
-                for i in range(0, len(full_text), chunk_size):
-                    yield {"status": "streaming", "content": full_text[i:i+chunk_size]}
-                    await asyncio.sleep(0.01)
-                    
-                yield {"status": "finished", "result": cached_data}
+        # ⭐ SEMANTIC CACHE CHECK — sau rewrite để dùng search_query đã chuẩn hóa
+        # VD: 'cột cờ ở đó' → rewrite → 'Cột cờ Hoàng Thành Thăng Long' → similarity=0.97 → HIT!
+        if not has_game_context and hasattr(state, 'sem_cache'):
+            cached = state.sem_cache.get(search_query, intent_filter="heritage")
+            if cached:
+                yield {"status": "processing", "step": 1.1, "message": "Đã tìm thấy trong bộ nhớ..."}
+                logger.info(f"✅ [SemanticCache HIT] query='{search_query[:50]}'")
+                full_text = cached.get("answer", "")
+                for i in range(0, len(full_text), 10):
+                    yield {"status": "streaming", "content": full_text[i:i+10]}
+                    await asyncio.sleep(0.005)
+                yield {"status": "finished", "result": cached}
                 return
-        else:
-            logger.info(f"⏭️  Skipping cache check (Game context present)")
 
         # [STEP 1.5] Semantic Site Retrieval (Routing using Search Query)
         yield {"status": "processing", "step": 1.5, "message": "Đang định tuyến ngữ nghĩa..."}
@@ -321,14 +305,23 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
             
             yield {"status": "processing", "step": 4, "message": f"Kết nối dữ liệu thực tế tại {site_key}..."}
             
-            # [LOGIC UPDATE] Realtime cũng phải RAG để lấy bối cảnh di tích (tránh bịa đặt thông tin gốc)
-            logger.info(f"🔍 [REALTIME + RAG] Fetching base knowledge for {site_key}...")
-            rag_content = await state.brain.fetch_and_rerank(
-                query=search_query, 
-                site_key=site_key,
-                history=history
-            )
-            rag_context_str = f"\n\nTHÔNG TIN LỊCH SỬ/VĂN HÓA:\n{rag_content}" if rag_content else ""
+            # Kiểm tra xem có cần RAG không — query thuần realtime (giá vé, thời tiết, giờ) thì skip RAG
+            PURE_REALTIME_KEYWORDS = ["giá vé", "vé vào", "mấy giờ", "mở cửa", "đóng cửa", "thời tiết", "mưa", "nắng", "nhiệt độ"]
+            check_text = norm_input + " " + search_query.lower()  # Kiểm tra cả câu gốc lẫn rewrite
+            is_pure_realtime = any(kw in check_text for kw in PURE_REALTIME_KEYWORDS)
+            
+            if is_pure_realtime:
+                logger.info(f"⚡ [REALTIME ONLY] Skip RAG — query thuần realtime: '{norm_input[:40]}'")
+                rag_context_str = ""
+            else:
+                # Câu hỏi realtime có kết hợp lịch sử/văn hóa → cần RAG context
+                logger.info(f"🔍 [REALTIME + RAG] Fetching base knowledge for {site_key}...")
+                rag_content = await state.brain.fetch_and_rerank(
+                    query=search_query,
+                    site_key=site_key,
+                    history=history
+                )
+                rag_context_str = f"\n\nTHÔNG TIN LỊCH SỬ/VĂN HÓA:\n{rag_content}" if rag_content else ""
 
             try:
                 # Gọi song song các tool
@@ -508,17 +501,13 @@ TUYỆT ĐỐI KHÔNG BỊA ĐẶT các thông tin cụ thể như ngày tháng,
         final_res["audio_base64"] = audio_b64
         final_res["emotion"] = emotion_data  # ✨ Thêm emotion metadata
         
-        # --- REDIS SET (SAVE CACHE) ---
-        # CHỈ LƯU NẾU LÀ HERITAGE VÀ KHÔNG CÓ GAME CONTEXT
-        if intent == "heritage" and state.redis and not has_game_context:
+        # ⭐ Lưu Semantic Cache SAU KHI hoàn thành — key = search_query (đã rewrite)
+        if intent == "heritage" and not has_game_context and hasattr(state, 'sem_cache'):
             try:
-                 # Lưu cache 1 tiếng (3600s)
-                 await state.redis.setex(cache_key, 3600, json.dumps(final_res, ensure_ascii=False))
-                 logger.info(f"💾 Caching HERITAGE response: {cache_key}")
+                state.sem_cache.set(search_query, final_res, intent="heritage", ttl=3600)
             except Exception as e:
-                 logger.warning(f"Redis Set Error: {e}")
-        elif has_game_context:
-            logger.info(f"⏭️  Skipping cache save (Game context present)")
+                logger.warning(f"⚠️ [SemanticCache] Save error: {e}")
+
 
         yield {"status": "finished", "result": final_res}
 

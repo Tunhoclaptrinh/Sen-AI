@@ -1,5 +1,6 @@
 import unicodedata
 import logging
+import re
 from sentence_transformers import CrossEncoder
 from typing import List, Optional, Tuple
 from sentence_transformers import SentenceTransformer
@@ -13,16 +14,21 @@ class KnowledgeBase:
         Khởi tạo KnowledgeBase với vector database và sentence transformer (embedder).
         """
         self.v_db = v_db
-        self.embedder = embedder  # Đảm bảo embedder được truyền vào
+        self.embedder = embedder
         self.reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-        self.history = []  # Lưu trữ lịch sử câu hỏi và câu trả lời
-        
+        self.history = []
+
+        # ⭐ Graph Store (Hybrid RAG)
+        from app.core.graph_store import GraphStore
+        self.graph = GraphStore(v_db.db) if v_db.db is not None else None
+        logger.info("✅ [KnowledgeBase] GraphStore initialized.")
+
         # [NEW] Semantic Routing Index (In-Memory)
-        self.route_data = [] # List of dict: {key, name, desc}
-        self.route_embeddings = None # Matrix (N, D)
+        self.route_data = []
+        self.route_embeddings = None
         self._build_routing_index()
-        
-        self.reload_config() # Initial load of site keywords
+
+        self.reload_config()
         
     def reload_config(self):
         """
@@ -339,7 +345,84 @@ class KnowledgeBase:
         answer = "\n\n".join([c['content'] for c in valid_candidates[:3]])
         
         logger.info(f"✅ [HERITAGE RAG] Trả về {len(answer)} ký tự context từ top-3 chunks")
+
+        # ⭐ GRAPH EXPANSION: Expand context bằng Knowledge Graph
+        graph_context = self._graph_expand(query, site_key)
+        if graph_context:
+            answer = answer + "\n\n" + graph_context
+            logger.info(f"🕸️  [Graph] Appended {len(graph_context)} chars graph context")
+
         return answer
+
+    def _graph_expand(self, query: str, site_key: Optional[str] = None) -> str:
+        """
+        ⭐ Hybrid RAG Graph Layer:
+        1. Tìm entities trong query
+        2. Query knowledge_graph collection
+        3. Format thành text đưa vào LLM context
+        """
+        if self.graph is None:
+            return ""
+
+        try:
+            site_triples = []
+            entity_triples = []
+
+            # B1: Lấy triples của site hiện tại (breadth)
+            if site_key:
+                site_triples = self.graph.get_by_site(site_key, limit=20)
+                logger.info(f"   🕸️  [Graph B1] Site '{site_key}': {len(site_triples)} triples")
+
+            # B2: Tìm entities trong query — dùng cách tách từ đơn giản hơn regex
+            # Tách query thành các cụm từ 2-4 từ liên tiếp
+            words = query.split()
+            candidates = []
+            for n in [3, 2, 4]:  # Ưu tiên cụm 3 từ, rồi 2, rồi 4
+                for i in range(len(words) - n + 1):
+                    phrase = " ".join(words[i:i+n])
+                    # Loại bỏ cụm có từ nối phổ biến
+                    skip_words = {"là", "và", "có", "gì", "của", "đến", "từ", "trong", "với", "không", "nào", "được"}
+                    phrase_words = set(phrase.lower().split())
+                    if len(phrase) >= 4 and not phrase_words.issubset(skip_words):
+                        candidates.append(phrase)
+
+            # Deduplicate và lấy max 5
+            seen = set()
+            unique_candidates = []
+            for c in candidates:
+                if c not in seen:
+                    seen.add(c)
+                    unique_candidates.append(c)
+
+            logger.info(f"   🕸️  [Graph B2] Entity candidates: {unique_candidates[:5]}")
+            for entity in unique_candidates[:5]:
+                et = self.graph.get_neighbors(entity, depth=2, max_nodes=8)
+                if et:
+                    logger.info(f"      → '{entity}': +{len(et)} triples")
+                entity_triples.extend(et)
+
+            # Merge: Entity-specific triples TRƯỚC (liên quan hơn), site triples sau
+            triples = entity_triples + site_triples
+
+            if not triples:
+                logger.info(f"   🕸️  [Graph] No triples → skip")
+                return ""
+
+            formatted = self.graph.format_triples_as_context(triples)
+            if not formatted:
+                return ""
+
+            # Log 3 sample triples đầu (bây giờ là entity triples)
+            sample_lines = formatted.strip().split("\n")[:3]
+            logger.info(f"   🕸️  [Graph] {len(triples)} triples | Top sample:")
+            for line in sample_lines:
+                logger.info(f"      {line.strip()}")
+
+            return f"\n🔗 MỐI QUAN HỆ (Knowledge Graph):\n{formatted}"
+
+        except Exception as e:
+            logger.warning(f"⚠️ [Graph] Expand error (non-critical): {e}")
+            return ""
 
     def detect_gibberish_query(self, query: str, history: List[dict] = None) -> Tuple[bool, Optional[str]]:
         """

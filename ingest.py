@@ -13,6 +13,7 @@ from sentence_transformers import SentenceTransformer
 # Module Database & Config
 from app.core.vector_db import VectorDatabase
 from app.core.config_loader import get_heritage_config
+from app.core.graph_store import GraphStore
 
 # --- 1. CẤU HÌNH ---
 load_dotenv()
@@ -21,6 +22,29 @@ logger = logging.getLogger(__name__)
 
 DB_NAME = "vector_db"
 COLLECTION_NAME = "heritage"
+
+# ── Graph Extraction Config ───────────────────────────────────────────────────
+ENABLE_GRAPH_EXTRACTION = os.getenv("ENABLE_GRAPH_EXTRACTION", "true").lower() == "true"
+GRAPH_BATCH_SIZE = 5  # Số chunks gửi GPT cùng lúc
+
+GRAPH_EXTRACTION_PROMPT = """Bạn là chuyên gia phân tích lịch sử và văn hóa Việt Nam.
+Nhiệm vụ: Trích xuất các quan hệ có ý nghĩa từ văn bản.
+
+QUY TẮC:
+1. Chỉ trích xuất quan hệ RÕ RÀNG có trong văn bản, KHÔNG suy diễn
+2. Subject và Object phải là danh từ cụ thể (địa danh, nhân vật, triều đại, sự kiện, năm)
+3. Relation phải là TIẾNG VIỆT IN HOA với dấu gạch dưới
+
+CÁC LOẠI RELATION HỢP LỆ:
+XÂY_BỞI, ĐƯỢC_XÂY_DỰNG_NĂM, THUỘC_TRIỀU_ĐẠI, CÓ_NHÂN_VẬT,
+LÀ_VUA, LÀ_TƯỚNG, NẰM_TẠI, CÓ_CÔNG_TRÌNH, ĐƯỢC_UNESCO_CÔNG_NHẬN_NĂM,
+CHIẾN_THẮNG, THẤT_BẠI_TRƯỚC, LIÊN_QUAN_ĐẾN, RA_ĐỜI_NĂM, KẾT_THÚC_NĂM,
+LÀ_DI_SẢN, KẾ_THỪA_TỪ, LÀ_NGHỆ_THUẬT, NGUỒN_GỐC_TỪ, LÀ_NHÂN_VẬT
+
+VÍ DỤ OUTPUT:
+[{"s": "Hoàng Thành Thăng Long", "r": "XÂY_BỞI", "o": "Lý Thái Tổ", "confidence": 0.95}]
+
+Trả về JSON array THUẦN TÚY, không markdown, không giải thích."""
 # Model 384 chiều tối ưu cho tiếng Việt/đa ngữ
 local_embedder = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 
@@ -175,7 +199,74 @@ def process_pdf_advanced(file_path: str) -> List[Dict]:
         logger.error(f"❌ Custom PDF Error: {e}")
         return []
 
-# --- 3. MAIN INGEST FLOW ---
+# --- 3. GRAPH EXTRACTION HELPER ---
+
+async def extract_triples_for_site(
+    chunks: list,
+    site_key: str,
+    site_name: str,
+    source: str = ""
+) -> list:
+    """
+    Dùng GPT để extract triples từ tất cả chunks của một site.
+    Chạy theo batch GRAPH_BATCH_SIZE chunk cùng lúc.
+
+    Returns: Danh sách triples [{"s":..., "r":..., "o":..., "confidence":...}]
+    """
+    from openai import AsyncOpenAI
+    openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    all_triples = []
+
+    for i in range(0, len(chunks), GRAPH_BATCH_SIZE):
+        batch = chunks[i:i + GRAPH_BATCH_SIZE]
+
+        async def extract_one(chunk_doc):
+            content = chunk_doc.get("content", "")
+            if not content or len(content.strip()) < 30:
+                return []
+            try:
+                res = await openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": GRAPH_EXTRACTION_PROMPT},
+                        {"role": "user", "content": (
+                            f"Di tích: {site_name}\n\nVăn bản:\n{content[:1500]}\n\n"
+                            f"Trích xuất tối đa 8 quan hệ quan trọng nhất."
+                        )}
+                    ],
+                    temperature=0,
+                    max_tokens=600
+                )
+                raw = res.choices[0].message.content.strip()
+                # Clean markdown wrapper nếu có
+                if "```" in raw:
+                    raw = raw.split("```")[1]
+                    if raw.startswith("json"):
+                        raw = raw[4:]
+                triples = json.loads(raw)
+                return triples if isinstance(triples, list) else []
+            except Exception as e:
+                logger.warning(f"   ⚠️ [Graph] Extract error: {e}")
+                return []
+
+        # Chạy song song cả batch
+        import asyncio
+        import json as json_module
+        import json
+        results = await asyncio.gather(*[extract_one(c) for c in batch], return_exceptions=True)
+
+        for r in results:
+            if isinstance(r, list):
+                all_triples.extend(r)
+
+        # Nhẹ nhàng với rate limit
+        await asyncio.sleep(0.3)
+
+    logger.info(f"   🕸️  [Graph] Total {len(all_triples)} triples extracted cho '{site_key}'")
+    return all_triples
+
+
+# --- 4. MAIN INGEST FLOW ---
 
 async def ingest():
     v_db = VectorDatabase(db_name=DB_NAME)
@@ -231,8 +322,8 @@ async def ingest():
         })
         if existing_count > 0:
             logger.info(f"🔄 File '{filename}' đã nạp. Xóa bản cũ để nạp bản mới...")
-            v_db.collection.delete_many({
-                "metadata.site_key": matched_key, 
+            v_db.db[target_collection].delete_many({
+                "metadata.site_key": matched_key,
                 "metadata.source": filename
             })
             
@@ -289,6 +380,25 @@ async def ingest():
             v_db.insert_many(target_collection, to_insert_list)
             total_chunks += len(to_insert_list)
             logger.info(f"✅ Đã thêm {len(to_insert_list)} chunks từ {filename}.")
+
+        # ⭐ GRAPH EXTRACTION: Extract triples song song
+        if ENABLE_GRAPH_EXTRACTION and to_insert_list:
+            logger.info(f"🕸️  [Graph] Extracting triples từ {len(to_insert_list)} chunks...")
+            try:
+                graph_triples = await extract_triples_for_site(
+                    chunks=processed_docs,
+                    site_key=matched_key,
+                    site_name=config[matched_key].get("name", matched_key),
+                    source=filename
+                )
+                graph = GraphStore(v_db.db)
+                # Xóa triples cũ của file này trước khi insert mới
+                graph.delete_by_source(f"ingest:{filename}")
+                saved = graph.insert_triples(graph_triples, matched_key, f"ingest:{filename}")
+                logger.info(f"   💾 [Graph] Saved {saved} triples cho '{matched_key}'")
+            except Exception as ge:
+                logger.error(f"   ❌ [Graph] Extraction failed (non-critical): {ge}")
+                # Không fail toàn bộ ingest nếu graph extraction lỗi
 
     # --- NGUỒN PHỤ: NẠP TỪ MONUMENTS.JSON DESCRIPTION (Nếu chưa có file chi tiết) ---
     logger.info("--- Kiểm tra mô tả ngắn trong monuments.json ---")
@@ -586,4 +696,9 @@ async def ingest_file_to_collection_advanced(
     return {"status": "success", "chunks": inserted_count, "mode": ingest_mode}
 
 if __name__ == "__main__":
+    import sys
+    # Fix: Windows asyncio ProactorEventLoop cleanup warning khi dùng httpx/openai
+    # "RuntimeError: Event loop is closed" xảy ra khi cleanup sau asyncio.run()
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(ingest())

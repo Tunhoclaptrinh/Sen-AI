@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from sentence_transformers import SentenceTransformer
 from app.core.vector_db import VectorDatabase
+from app.core.semantic_cache import SemanticCache
 from app.services.knowledge import KnowledgeBase
 from app.services.tools import HeritageTools
 import logging
@@ -119,6 +120,9 @@ async def startup():
     # Khởi tạo KnowledgeBase cho việc lưu trữ và truy vấn dữ liệu
     app.state.brain = KnowledgeBase(v_db, embedder)
     
+    # ⭐ Khởi tạo Semantic Cache (cosine similarity thay vì exact string)
+    app.state.sem_cache = SemanticCache(db=v_db.db, embedder=embedder)
+    
     # Khởi tạo Verifier module
     from app.services.verifier import Verifier
     app.state.verifier = Verifier(app.state.openai)
@@ -164,47 +168,13 @@ async def chat_api(request: ChatRequest):
     try:
         import json
         
-        # 🔴 BƯỚC 1: Gọi LLM trước để phân loại intent (chitchat, realtime, rag)
         logger.info(f"\n{'='*80}")
         logger.info(f"🚀 INPUT: {request.user_input}")
         logger.info(f"{'='*80}")
         
-        # Gọi workflow để LLM phân loại
+        # Gọi workflow — cache được xử lý BÊN TRONG workflow (sau rewrite)
         result = await agentic_workflow(request.user_input, request.history, app.state)
-        intent = result.get("intent", "chitchat")
-        
-        logger.info(f"📋 Intent detected: {intent}")
-        
-        # ✨ CHITCHAT: Response ngay (tính tế, không cache)
-        if intent == "chitchat":
-            logger.info(f"💬 CHITCHAT mode: Response ngay, không dùng cache")
-            result["from_cache"] = False
-            return result
-        
-        # 🔴 BƯỚC 2: Normalize input để tạo cache key (cho realtime/heritage)
-        normalized_input = " ".join(request.user_input.lower().split())
-        cache_key = f"sen:cache:{normalized_input}"
-        
-        # 🔴 BƯỚC 3: Kiểm tra Redis (chỉ cache realtime/heritage)
-        logger.info(f"🔍 Kiểm tra cache Redis: {cache_key}")
-        cached_result = await app.state.redis.get(cache_key)
-        
-        if cached_result:
-            logger.info(f"✅ [Step 10] FINISHED (Cache Hit). Data Source: 💾 CACHE (Redis)")
-            final_res = json.loads(cached_result)
-            final_res["from_cache"] = True
-            return final_res
-        
-        logger.info(f"❌ MISS CACHE. Sử dụng kết quả vừa tính từ LLM")
-        
-        # Kết quả đã có từ BƯỚC 1, không cần gọi lại workflow
-        result["from_cache"] = False
-        
-        # 🔴 BƯỚC 4: Lưu kết quả vào cache (realtime/rag: 30 phút để có data mới)
-        cache_ttl = 1800  # 30 minutes cho realtime/heritage
-        await app.state.redis.setex(cache_key, cache_ttl, json.dumps(result, ensure_ascii=False))
-        logger.info(f"💾 Lưu cache với TTL {cache_ttl}s: {cache_key} (intent: {intent})")
-        
+        result["from_cache"] = result.get("from_cache", False)
         return result
     except Exception as e:
         logger.error(f"❌ Lỗi xử lý câu hỏi: {str(e)}", exc_info=True)
