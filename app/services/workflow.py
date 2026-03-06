@@ -307,8 +307,7 @@ async def agentic_workflow_stream(u_input: str, history: list, state, use_verifi
             
             # Kiểm tra xem có cần RAG không — query thuần realtime (giá vé, thời tiết, giờ) thì skip RAG
             PURE_REALTIME_KEYWORDS = ["giá vé", "vé vào", "mấy giờ", "mở cửa", "đóng cửa", "thời tiết", "mưa", "nắng", "nhiệt độ"]
-            check_text = norm_input + " " + search_query.lower()  # Kiểm tra cả câu gốc lẫn rewrite
-            is_pure_realtime = any(kw in check_text for kw in PURE_REALTIME_KEYWORDS)
+            is_pure_realtime = any(kw in norm_input for kw in PURE_REALTIME_KEYWORDS)
             
             if is_pure_realtime:
                 logger.info(f"⚡ [REALTIME ONLY] Skip RAG — query thuần realtime: '{norm_input[:40]}'")
